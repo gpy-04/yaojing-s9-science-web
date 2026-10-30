@@ -10,7 +10,7 @@ type TimelineEvent = {
   context: string;
   impact: string;
   source: string;
-  track: 'auto' | 'ai';
+  track: 'auto' | 'sensor' | 'ai';
 };
 
 type ArchiveMeta = {
@@ -33,6 +33,16 @@ const autoEvents: TimelineEvent[] = [
   { year: '今天', title: '车开始感知环境', detail: '传感器、计算平台与驾驶辅助把汽车变成会观察的机器。', context: '摄像头、雷达、定位和车载计算把道路变成一组持续更新的数据。车辆仍需要清晰的边界和人的监督，但它已经开始用机器的方式读取环境。', impact: '汽车的核心问题从“如何驱动”扩展到“如何理解正在发生的事”。', source: '当代智能汽车 / 技术概览', track: 'auto' },
 ];
 
+const sensorEvents: TimelineEvent[] = [
+  { year: '1904', title: '无线电波开始寻找目标', detail: '机器第一次尝试用回波判断远处是否有东西。', context: '早期无线电探测把“看见”改写成“发出信号，再等待返回”。目标不必发光，也不必靠近，机器可以用时间差和回波判断它是否存在。', impact: '感知从被动观察走向主动测量，距离成为可以计算的量。', source: '传感器史 / 早期无线电探测', track: 'sensor' },
+  { year: '1930s–1940s', title: '雷达把不可见的空间画出来', detail: '无线电回波进入防空、航海与交通系统。', context: '雷达把电磁波发向远方，再把回波转换成方向、距离和速度。屏幕上的光点并不是世界本身，而是机器对世界做出的第一张测量地图。', impact: '机器开始在没有视线、没有灯光的条件下建立环境模型。', source: 'Radar history / 概览节点', track: 'sensor' },
+  { year: '1940s–1950s', title: '超声波学会测量距离', detail: '高频声波让近距离探测有了另一种语言。', context: '超声波在工业检测与医学成像中被反复使用，也为后来车辆的近距离探测提供了技术想象：发出声音，等待回波，再判断障碍物离自己有多远。', impact: '感知不再只有“看”这一种方式，声音也能成为机器的尺子。', source: 'Ultrasonic sensing / 技术史概览', track: 'sensor' },
+  { year: '1960s–1980s', title: '摄像头让机器看见形状', detail: '图像从记录工具变成可被计算的输入。', context: '机器视觉把连续的光线拆成像素，再从边缘、明暗和形状中寻找规律。它距离人的理解还很远，却让“看见”第一次进入了算法流程。', impact: '环境被转换成图像数据，识别成为感知系统的一部分。', source: 'Machine vision / 技术史概览', track: 'sensor' },
+  { year: '2000s', title: '激光雷达把空间切成点云', detail: '光脉冲把三维世界拆成一组组可计算的距离。', context: '激光雷达向空间发出光脉冲，根据返回时间估算距离，再把大量测量点组织成三维结构。道路、车辆和障碍物开始以点云的形式进入机器内部。', impact: '机器获得了更立体的空间感，感知从平面图像走向几何世界。', source: 'LiDAR / 技术概览', track: 'sensor' },
+  { year: '2010s', title: '传感器开始彼此校正', detail: '摄像头、雷达、定位与地图被放进同一套系统。', context: '单个传感器总会有盲区：摄像头受光线影响，雷达不擅长理解纹理，超声波只覆盖近处。多传感器融合让不同测量结果互相补足，也让系统开始处理“不确定”。', impact: '感知从单一器官变成一组协作的器官。', source: 'Sensor fusion / 工程概览', track: 'sensor' },
+  { year: '今天', title: '感知成为车辆的第一层判断', detail: '传感器把道路持续翻译成距离、方向、类别与风险。', context: '一辆智能汽车同时接收光、声、电磁波和定位信息。它并没有直接“看到世界”，而是在不同来源的测量之间建立一个不断更新的环境模型，再把结果交给预测、规划和控制。', impact: '汽车真正接近智能的入口，不是多装一个零件，而是学会把不同证据放在一起。', source: '智能汽车感知系统 / 技术概览', track: 'sensor' },
+];
+
 const aiEvents: TimelineEvent[] = [
   { year: '1950', title: '机器能否思考？', detail: '图灵把问题改写成可观察、可讨论的测试。', context: '艾伦·图灵没有把“思考”定义成一个神秘内在状态，而是提出用对话表现来讨论机器是否展现出类似智能的行为。这个转向影响了后来的人机交互与智能评估。', impact: 'AI 的问题从哲学猜想变成可以设计实验、比较行为的问题。', source: 'Alan Turing / Computing Machinery and Intelligence', track: 'ai' },
   { year: '1956', title: '人工智能获得名字', detail: '达特茅斯会议把“人工智能”确立为一项研究议程。', context: '达特茅斯暑期研究项目提出：学习、语言、抽象和解决问题等能力，可以被描述得足够精确，从而让机器模拟它们。这个名字成为一整个研究领域的入口。', impact: '智能第一次被组织成一个跨学科的工程目标。', source: 'Dartmouth Summer Research Project', track: 'ai' },
@@ -45,6 +55,33 @@ const aiEvents: TimelineEvent[] = [
 ];
 
 const archiveAssets: Record<string, ArchiveMeta> = {
+  '无线电波开始寻找目标': {
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Early%20radar%20antenna%20-%20US%20Naval%20Research%20Laboratory%20Anacostia.jpg?width=1200',
+    imageAlt: '早期雷达天线，摄于美国海军研究实验室',
+    caption: '早期雷达天线；它把无线电回波变成了可以被机器读取的距离和方向。',
+    credit: 'Wikimedia Commons / U.S. Naval Research Laboratory',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/Category:Radar_history',
+    story: '在雷达出现之前，机器主要依靠眼睛、耳朵和人的判断寻找目标。无线电探测带来了一种新的感知语法：发出信号，等待回波，再把时间差翻译成距离。',
+    quote: '看不见的东西，也可以留下可计算的回声。',
+  },
+  '激光雷达把空间切成点云': {
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Velodyne%20Lidar%20Alpha%20Prime%20Ultra%20Puck%20Puck%20Sensor%20Family.jpg?width=1200',
+    imageAlt: 'Velodyne 激光雷达传感器',
+    caption: '激光雷达传感器；光脉冲的往返时间被转换成空间中的距离点。',
+    credit: 'Wikimedia Commons / Velodyne lidar sensor family',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/Category:LIDAR_sensors',
+    story: '激光雷达把空间拆成一组组距离。它不试图像人一样理解一棵树，而是先测量树干、枝叶和道路边缘离自己有多远，再把这些点组织成一幅可以被算法继续处理的三维地图。',
+    quote: '当世界被拆成点，空间就有了机器可以计算的形状。',
+  },
+  '感知成为车辆的第一层判断': {
+    image: 'https://commons.wikimedia.org/wiki/Special:FilePath/Ibeo%20LiDAR-Sensor%20in%20Car.jpg?width=1200',
+    imageAlt: '车辆上的激光雷达传感器',
+    caption: '车辆上的激光雷达传感器；现代感知系统通常把多种测量方式放在一起。',
+    credit: 'Wikimedia Commons / Ibeo LiDAR sensor in car',
+    sourceUrl: 'https://commons.wikimedia.org/wiki/Category:Automobile_sensors',
+    story: '今天的车辆并没有一双单独的“机器眼睛”。它同时接收摄像头、雷达、超声波和定位信息，再把不同证据拼成一个不断更新的环境模型。感知因此成为驾驶判断的第一层，而不是一个孤立的零件。',
+    quote: '智能不是看见更多，而是让不同证据彼此说得上话。',
+  },
   '轮子改变移动': {
     image: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Iron_wheels_with_bronze_hubs_-_Nabu_Temple%2C_Palace_of_Sargon_II%2C_Khorsabad%2C_Neo-Assyrian_period%2C_721-705_BC_-_Oriental_Institute_Museum%2C_University_of_Chicago_-_DSC07574.JPG/960px-thumbnail.jpg',
     imageAlt: '东方研究所博物馆收藏的古代铁轮与青铜轮毂',
@@ -153,7 +190,7 @@ app.innerHTML = `
 
     <nav class="chapter-menu" aria-label="章节导航" data-chapter-menu>
       <button class="chapter-menu__item is-active" type="button" data-go="history">
-        <span>01</span><strong>共同进化</strong><small>汽车 × AI</small>
+        <span>01</span><strong>机器感知博物馆</strong><small>汽车 × 传感器 × AI</small>
       </button>
       <button class="chapter-menu__item" type="button" data-go="explore">
         <span>02</span><strong>打开曜境 S9</strong><small>结构 × 感知</small>
@@ -163,46 +200,46 @@ app.innerHTML = `
     <section class="chapter chapter--history is-active" id="history" data-page="history">
       <div class="history-paper">
         <div class="paper-masthead">
-          <div class="paper-meta"><span>YJ / S9 ARCHIVE</span><span>VOL. 01 · 2026.10.30</span><span>汽车 × AI · 特刊</span></div>
+          <div class="paper-meta"><span>YJ / S9 ARCHIVE</span><span>VOL. 01 · 2026.10.30</span><span>汽车 × 传感器 × AI · 特刊</span></div>
           <div class="paper-rule"></div>
           <div class="history-intro">
-            <p class="eyebrow">CHAPTER 01 / THE SHARED LINE</p>
-            <h1>机器如何<br /><em>获得感知</em></h1>
+            <p class="eyebrow">CHAPTER 01 / THE MUSEUM OF MACHINE SENSE</p>
+            <h1>汽车、传感器<br /><em>与 AI 的共同史</em></h1>
             <div class="intro-copy">
-              <p>一份从轮子、蒸汽和电机开始的“移动史”，一份从图灵、感知机和深度学习开始的“理解史”。它们在今天相遇：汽车开始读取世界，AI 开始进入道路。</p>
-              <p class="intro-copy__note">这不是一条直线，而是一张由材料、能源、计算和人的想象共同写成的报纸。</p>
+              <p>欢迎进入一座关于机器感知的历史博物馆。这里收藏三条彼此交错的展线：汽车如何获得移动的身体，传感器如何把世界变成距离与回波，AI 又如何从规则走向学习、推理与行动。</p>
+              <p class="intro-copy__note">每个节点都是一件展品，也是一段仍在延续的故事。沿着时间向前走，你会看到一辆车如何慢慢学会看见。</p>
               <button class="text-button" type="button" data-next="explore">进入结构探索 <span>↗</span></button>
             </div>
           </div>
-          <div class="paper-headline"><strong>从滚动到推理：两个世纪的机器进化</strong><span>点击时间节点，打开一页历史档案</span></div>
+          <div class="paper-headline"><strong>从滚动、测距到推理：机器感知的三条历史线</strong><span>点击展签，打开一页历史档案</span></div>
         </div>
 
         <div class="history-paper-lead">
           <article class="paper-lead-story">
-            <span class="timeline-kicker">EDITOR'S NOTE / 开篇</span>
-            <h2>先有一只轮子，<br /><em>才有后来的一切。</em></h2>
-            <p>汽车看似从发动机开始，实际上更早的转折发生在轮子与轴被组合的那一刻。滚动让重量获得了方向，方向又催生出车架、制动、道路和速度。</p>
-            <p>AI 的故事也有相似的结构：先把“智能”写成问题，再把问题拆成数据、模型、算力和反馈。汽车与 AI 的相遇，不只是把电脑装进车里，而是让移动系统开始拥有一套感知世界的语言。</p>
-            <div class="paper-byline"><span>编辑部观察</span><span>共 15 个节点 · 2 条时间线</span></div>
+            <span class="timeline-kicker">MUSEUM NOTE / 开馆词</span>
+            <h2>先让机器移动，<br /><em>再让它读取世界。</em></h2>
+            <p>汽车的历史从轮子开始：重量被托起，方向被设计，速度第一次成为可以被工程处理的问题。后来，发动机、电池和底盘把“移动”变成一套完整的身体。</p>
+            <p>传感器接着为这具身体装上耳朵和眼睛：雷达测量回波，超声波贴近障碍物，摄像头记录光线，激光雷达把空间拆成点云。AI 则试图在这些证据之间建立判断，让机器不只移动，也能理解正在发生什么。</p>
+            <div class="paper-byline"><span>馆长导览</span><span>共 22 个展签 · 3 条历史线</span></div>
           </article>
           <figure class="paper-cover-figure">
             <img src="${archiveAssets['轮子改变移动'].image}" alt="${archiveAssets['轮子改变移动'].imageAlt}" loading="eager" />
             <figcaption><span>ARCHIVE IMAGE 01</span>${archiveAssets['轮子改变移动'].caption}</figcaption>
           </figure>
           <aside class="paper-facts">
-            <div><span>起点</span><strong>约公元前 3500 年</strong><small>轮子与轴的组合</small></div>
-            <div><span>转折</span><strong>1885–1886</strong><small>汽车成为独立机器</small></div>
-            <div><span>汇合</span><strong>今天</strong><small>AI 进入真实道路</small></div>
+            <div><span>第一展线</span><strong>汽车</strong><small>动力、底盘与移动</small></div>
+            <div><span>第二展线</span><strong>传感器</strong><small>光、声与电磁回波</small></div>
+            <div><span>第三展线</span><strong>AI</strong><small>数据、学习与判断</small></div>
           </aside>
         </div>
 
       <div class="timeline-stage">
         <div class="timeline-header">
           <div>
-            <span class="timeline-kicker">A DOUBLE TIMELINE</span>
-            <h2>从移动，到理解</h2>
+            <span class="timeline-kicker">THE THREE GALLERIES</span>
+            <h2>从移动，到测量，再到理解</h2>
           </div>
-          <p>点击节点，查看一段改变机器的想法。</p>
+          <p>点击展签，查看一段改变机器的技术史。</p>
         </div>
         <div class="timeline-grid">
           <div class="timeline-rail" data-rail="auto">
@@ -210,22 +247,27 @@ app.innerHTML = `
             <div class="rail-line"></div>
             <div class="event-list" data-events="auto"></div>
           </div>
+          <div class="timeline-rail" data-rail="sensor">
+            <div class="rail-meta"><span class="rail-dot rail-dot--sensor"></span><span>传感器 / SENSORS</span></div>
+            <div class="rail-line"></div>
+            <div class="event-list" data-events="sensor"></div>
+          </div>
           <div class="timeline-rail" data-rail="ai">
             <div class="rail-meta"><span class="rail-dot rail-dot--cyan"></span><span>AI / INTELLIGENCE</span></div>
             <div class="rail-line"></div>
             <div class="event-list" data-events="ai"></div>
           </div>
         </div>
-        <div class="timeline-note"><span>—</span> 两条线在今天汇合：机器开始在真实世界里看、想、行动。</div>
+        <div class="timeline-note"><span>—</span> 三条线在今天汇合：汽车开始在真实世界里看、想、行动。</div>
       </div>
 
       <div class="history-archive" data-history-archive>
         <div class="archive-header">
           <div>
-            <span class="timeline-kicker">OPEN ARCHIVE / ALL NODES</span>
-            <h2>从古至今，<em>全部展开。</em></h2>
+            <span class="timeline-kicker">OPEN ARCHIVE / ALL EXHIBITS</span>
+            <h2>从古至今，<em>展品全部展开。</em></h2>
           </div>
-          <p>不需要打开弹窗。沿着报纸向下滚动，每一个节点都已经写成一篇短档案。</p>
+          <p>沿着展厅向下走，每一个节点都已经写成一张展签和一篇短档案。</p>
         </div>
         <div class="archive-list" data-history-archive-list></div>
       </div>
@@ -235,7 +277,7 @@ app.innerHTML = `
       </div>
 
       <div class="history-footer">
-        <span>SCROLL TO EXPLORE</span>
+        <span>WALK THE EXHIBITION</span>
         <span class="scroll-line"></span>
         <span>01</span>
       </div>
@@ -329,7 +371,7 @@ app.innerHTML = `
   </main>
 `;
 
-function renderEvents(track: 'auto' | 'ai', events: TimelineEvent[]) {
+function renderEvents(track: 'auto' | 'sensor' | 'ai', events: TimelineEvent[]) {
   const container = document.querySelector<HTMLDivElement>(`[data-events="${track}"]`);
   if (!container) return;
   container.innerHTML = events.map((event, index) => `
@@ -342,6 +384,7 @@ function renderEvents(track: 'auto' | 'ai', events: TimelineEvent[]) {
 }
 
 renderEvents('auto', autoEvents);
+renderEvents('sensor', sensorEvents);
 renderEvents('ai', aiEvents);
 
 function renderArchiveArticles() {
@@ -349,6 +392,7 @@ function renderArchiveArticles() {
   if (!container) return;
   const entries = [
     ...autoEvents.map((event, index) => ({ event, track: 'auto' as const, index })),
+    ...sensorEvents.map((event, index) => ({ event, track: 'sensor' as const, index })),
     ...aiEvents.map((event, index) => ({ event, track: 'ai' as const, index })),
   ];
   container.innerHTML = entries.map(({ event, track, index }) => {
@@ -359,7 +403,7 @@ function renderArchiveArticles() {
       : `<div class="archive-article__media archive-article__media--empty"><span>ARCHIVE NOTE</span><strong>资料节点</strong><small>本条为概念与研究路线的历史摘要，来源信息保留在右侧。</small></div>`;
     return `
       <article class="archive-article archive-article--${track}" id="archive-${track}-${number}" data-archive-article>
-        <div class="archive-article__rail"><span>${track === 'auto' ? 'AUTOMOTIVE' : 'INTELLIGENCE'}</span><b>${number}</b></div>
+        <div class="archive-article__rail"><span>${track === 'auto' ? 'AUTOMOTIVE' : track === 'sensor' ? 'SENSORS' : 'INTELLIGENCE'}</span><b>${number}</b></div>
         <div class="archive-article__body">
           <div class="archive-article__heading"><span class="archive-article__year">${event.year}</span><h3>${event.title}</h3></div>
           <div class="archive-article__grid">
@@ -387,7 +431,7 @@ const chapterLabel = document.querySelector<HTMLElement>('[data-chapter-label]')
 const menuItems = [...document.querySelectorAll<HTMLButtonElement>('[data-go]')];
 
 const pageMeta: Record<string, { number: string; label: string }> = {
-  history: { number: '01', label: '共同进化' },
+  history: { number: '01', label: '机器感知博物馆' },
   explore: { number: '02', label: '打开曜境 S9' },
 };
 
@@ -422,11 +466,12 @@ document.querySelectorAll<HTMLElement>('[data-next]').forEach((button) => {
 
 menuItems.forEach((item) => item.addEventListener('click', () => showPage(item.dataset.go ?? 'history')));
 
-function updateDossier(event: TimelineEvent, track: 'auto' | 'ai', index: number) {
+function updateDossier(event: TimelineEvent, track: 'auto' | 'sensor' | 'ai', index: number) {
   const archive = archiveAssets[event.title];
   const count = String(index + 1).padStart(2, '0');
   document.querySelector<HTMLElement>('[data-dossier-title]')?.replaceChildren(document.createTextNode(event.title));
-  document.querySelector<HTMLElement>('[data-dossier-track]')?.replaceChildren(document.createTextNode(`${track === 'auto' ? 'AUTOMOTIVE' : 'INTELLIGENCE'} / ${count}`));
+  const trackLabel = track === 'auto' ? 'AUTOMOTIVE' : track === 'sensor' ? 'SENSORS' : 'INTELLIGENCE';
+  document.querySelector<HTMLElement>('[data-dossier-track]')?.replaceChildren(document.createTextNode(`${trackLabel} / ${count}`));
   document.querySelector<HTMLElement>('[data-dossier-year]')?.replaceChildren(document.createTextNode(event.year));
   document.querySelector<HTMLElement>('[data-dossier-detail]')?.replaceChildren(document.createTextNode(event.detail));
   document.querySelector<HTMLElement>('[data-dossier-context]')?.replaceChildren(document.createTextNode(event.context));
@@ -460,7 +505,7 @@ function updateDossier(event: TimelineEvent, track: 'auto' | 'ai', index: number
 
 document.querySelectorAll<HTMLButtonElement>('.timeline-event').forEach((eventButton) => {
   eventButton.addEventListener('click', () => {
-    const track = eventButton.dataset.track as 'auto' | 'ai';
+    const track = eventButton.dataset.track as 'auto' | 'sensor' | 'ai';
     document.querySelectorAll<HTMLButtonElement>(`.timeline-event[data-track="${track}"]`).forEach((button) => button.classList.remove('is-selected'));
     eventButton.classList.add('is-selected');
     const index = Number(eventButton.dataset.eventIndex ?? 0);
