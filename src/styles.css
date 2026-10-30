@@ -209,7 +209,13 @@
 
   /* Chapter 01 is treated as a periodical: paper stock, ink columns,
      archive captions and a long-form reading rhythm. */
-  .chapter--history { background: #0c0d0e; }
+  .chapter--history {
+    padding: 96px 0 0;
+    background:
+      radial-gradient(circle at 14% 2%, rgba(145, 216, 208, .09), transparent 34%),
+      radial-gradient(circle at 88% 8%, rgba(221, 163, 93, .08), transparent 38%),
+      #111516;
+  }
   .history-paper {
     --bg: rgba(23, 29, 29, .88);
     --surface: rgba(31, 39, 38, .72);
@@ -219,17 +225,18 @@
     --hairline: rgba(218, 227, 219, .2);
     --amber: #dda35d;
     --cyan: #91d8d0;
-    max-width: 1480px;
-    margin: 0 auto;
-    padding: clamp(22px, 3vw, 48px) clamp(20px, 4vw, 68px) 40px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: clamp(22px, 3vw, 48px) clamp(24px, 5vw, 84px) 40px;
     color: var(--text);
     background:
       radial-gradient(circle at 12% 0%, rgba(145, 216, 208, .11), transparent 30%),
       radial-gradient(circle at 88% 8%, rgba(221, 163, 93, .1), transparent 34%),
       linear-gradient(135deg, rgba(27, 34, 34, .94), rgba(14, 18, 19, .86));
-    border: 1px solid rgba(218, 227, 219, .12);
-    box-shadow: 0 22px 80px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(241, 239, 232, .05);
-    backdrop-filter: blur(16px) saturate(1.08);
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
   }
   .history-paper h1,
   .history-paper h2,
@@ -491,6 +498,14 @@
   .model-viewer { min-height: min(72svh, 520px); }
   .explore-panel { padding-top: 22px; }
   .part-popup { max-height: min(52svh, 260px); }
+}
+
+/* Let the newspaper's tinted surface run edge-to-edge; retain only the
+   internal reading gutters so the long-form text stays comfortable to read. */
+.chapter--history { padding-left: 0; padding-right: 0; }
+
+@media (max-width: 760px) {
+  .chapter--history { padding-top: 76px; }
 }
 
 /* The model chapter is an app-like viewport: lock the document itself while
