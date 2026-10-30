@@ -406,3 +406,139 @@
   .archive-article__media img { aspect-ratio: 1.5 / 1; }
   .archive-article__source { display: grid; gap: 8px; }
 }
+
+/* Tablet and narrow desktop: keep the model dominant while giving the
+   explanatory panel enough room for controls and readable copy. */
+@media (max-width: 1024px) {
+  .topbar { padding-left: 28px; padding-right: 28px; }
+  .chapter { padding-left: 28px; padding-right: 28px; }
+  .explore-workbench { grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); }
+  .model-viewer { min-height: 600px; }
+  .explore-panel { padding: 30px 24px 24px; }
+  .explore-panel__intro h2 { font-size: clamp(2.4rem, 5vw, 4rem); }
+  .history-paper-lead { grid-template-columns: minmax(0, 1fr) minmax(260px, .9fr); gap: 28px; }
+  .history-paper-lead .paper-facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); border-left: 0; border-top: 1px solid var(--hairline); }
+  .history-paper-lead .paper-facts div { padding: 16px 18px 0 0; border-bottom: 0; }
+  .history-paper-lead .paper-facts div + div { padding-top: 16px; border-left: 1px solid var(--hairline); padding-left: 18px; }
+  .history-paper .dossier-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .archive-article { grid-template-columns: 90px minmax(0, 1fr); gap: 24px; }
+}
+
+@media (max-width: 760px) {
+  .topbar { padding: 16px 14px; gap: 10px; }
+  .brand { gap: 8px; min-width: 0; }
+  .brand-mark { width: 32px; height: 32px; }
+  .brand-name { max-width: 120px; overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+  .chapter-indicator { margin-right: 4px; font-size: 9px; }
+  .menu-button { width: 36px; }
+  .chapter { padding: 88px 14px 24px; }
+  .model-viewer { min-height: 56svh; max-height: 72svh; }
+  .viewer-topline { top: 14px; left: 14px; right: 14px; font-size: 8px; letter-spacing: .1em; }
+  .model-hint { left: 14px; bottom: 14px; max-width: 180px; font-size: 10px; line-height: 1.4; }
+  .model-status { right: 14px; bottom: 14px; }
+  .explode-hud { top: 48px; left: 14px; font-size: 8px; }
+  .part-popup { top: 68px; left: 14px; right: 14px; width: auto; max-height: 40svh; overflow: auto; padding: 15px 15px 14px; }
+  .part-popup h3 { font-size: 21px; }
+  .part-popup p { font-size: 11px; }
+  .adas-overlay__status { top: 48px; left: 14px; font-size: 8px; }
+  .adas-overlay__legend { top: 48px; right: 14px; gap: 5px; font-size: 8px; }
+  .adas-overlay__metrics { left: 14px; right: 14px; bottom: 42px; gap: 10px; }
+  .adas-overlay__metrics b { font-size: 14px; }
+  .explore-panel { min-height: auto; padding: 26px 14px 20px; }
+  .explore-panel__intro h2 { font-size: clamp(2.8rem, 15vw, 5rem); }
+  .explore-panel__intro > p:not(.eyebrow) { max-width: none; margin-top: 16px; font-size: 12px; }
+  .explore-controls { margin-top: 26px; }
+  .explore-control { min-height: 58px; padding: 13px 0; }
+  .explore-control strong { font-size: 13px; }
+  .explore-control small { font-size: 10px; }
+  .model-actions { gap: 6px; margin-top: 14px; }
+  .model-action { grid-template-columns: 1fr; justify-items: center; gap: 5px; min-height: 64px; padding: 9px 5px; text-align: center; }
+  .model-action__glyph { width: 20px; height: 20px; font-size: 12px; }
+  .model-action strong { font-size: 11px; }
+  .model-action small { font-size: 9px; }
+  .explode-controls { margin-top: 14px; padding-top: 12px; }
+  .explode-toggle { padding: 10px 11px; }
+  .explode-toggle strong { font-size: 13px; }
+  .explode-toggle small { font-size: 9px; }
+  .explode-reset { width: 40px; }
+  .explore-detail { margin-top: 24px; }
+  .explore-detail h3 { font-size: clamp(2rem, 10vw, 3rem); }
+  .part-inspector.is-visible { max-height: 280px; }
+  .explore-facts { gap: 7px; }
+  .explore-facts dt { font-size: 9px; }
+  .explore-facts dd { font-size: 9px; overflow-wrap: anywhere; }
+  .explore-footer { display: grid; align-items: start; gap: 18px; margin-top: 26px; }
+  .model-credit { max-width: none; text-align: left; }
+  .history-paper { padding-left: 14px; padding-right: 14px; }
+  .history-paper h1 { overflow-wrap: anywhere; }
+  .archive-header h2, .archive-article__heading h3 { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 380px) {
+  .model-action { min-height: 60px; }
+  .model-action__glyph { display: none; }
+  .model-action strong { font-size: 10px; }
+  .model-action small { font-size: 8px; }
+  .explode-toggle small { display: none; }
+  .adas-overlay__legend { max-width: 110px; text-align: right; }
+}
+
+/* Final responsive pass for the interactive model workbench. These rules
+   intentionally sit last so the newer controls keep a usable touch target
+   even when the older chapter-level mobile rules are also active. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .explore-workbench { grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr); }
+  .model-viewer { min-height: clamp(560px, 70svh, 700px); }
+  .explore-panel { padding: 30px 24px 26px; }
+  .model-actions { grid-template-columns: 1fr; }
+  .model-action { min-height: 52px; }
+  .history-paper { padding-left: 28px; padding-right: 28px; }
+}
+
+@media (max-width: 760px) {
+  body { overflow-x: clip; }
+  .topbar { padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: 14px; }
+  .chapter { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .model-viewer {
+    min-height: clamp(360px, 64svh, 620px);
+    max-height: none;
+  }
+  .viewer-topline { gap: 12px; align-items: flex-start; }
+  .viewer-topline span { min-width: 0; overflow-wrap: anywhere; }
+  .viewer-topline span:last-child { text-align: right; }
+  .model-loading { left: 14px; right: 14px; bottom: 48px; gap: 6px 10px; font-size: 8px; }
+  .model-hint { bottom: 13px; max-width: 190px; }
+  .model-status { bottom: 13px; }
+  .adas-overlay__legend { max-width: 145px; text-align: right; }
+  .adas-overlay__metrics { max-width: none; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .explore-panel { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+  .model-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .model-action { min-width: 0; }
+  .model-action strong,
+  .model-action small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .explode-controls { grid-template-columns: minmax(0, 1fr) 44px; }
+  .explode-toggle { min-height: 68px; }
+  .part-popup {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    width: auto;
+    max-height: min(42svh, 300px);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .part-inspector.is-visible { max-height: 340px; }
+  .explore-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .explore-facts div { min-width: 0; }
+  .explore-footer { padding-bottom: 4px; }
+}
+
+@media (max-width: 380px) {
+  .model-actions { gap: 5px; }
+  .model-action { padding-left: 3px; padding-right: 3px; }
+  .model-action strong { font-size: 10px; }
+  .model-action small { font-size: 8px; }
+  .explode-toggle { padding-left: 10px; padding-right: 10px; }
+  .part-popup { right: 9px; bottom: 9px; left: 9px; }
+}
