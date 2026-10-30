@@ -272,6 +272,17 @@ app.innerHTML = `
             <button class="explore-control" type="button" data-focus="cabin" role="tab" aria-selected="false"><span>03</span><strong>座舱系统</strong><small>人与机器</small></button>
             <button class="explore-control" type="button" data-focus="adas" role="tab" aria-selected="false"><span>04</span><strong>智驾感知</strong><small>机器的眼睛</small></button>
           </div>
+          <div class="model-actions" aria-label="车辆交互控制">
+            <button class="model-action" type="button" data-model-action="doors" aria-pressed="false">
+              <span class="model-action__glyph">↔</span><span><strong>车门</strong><small data-action-label="doors">打开</small></span>
+            </button>
+            <button class="model-action" type="button" data-model-action="tailgate" aria-pressed="false">
+              <span class="model-action__glyph">↥</span><span><strong>后备箱</strong><small data-action-label="tailgate">打开</small></span>
+            </button>
+            <button class="model-action" type="button" data-model-action="lights" aria-pressed="false">
+              <span class="model-action__glyph">◉</span><span><strong>车灯</strong><small data-action-label="lights">打开</small></span>
+            </button>
+          </div>
           <div class="explore-detail" data-focus-detail>
             <div class="explore-detail__index" data-focus-index>SYSTEM 01 / 04</div>
             <h3 data-focus-title>整车结构</h3>
@@ -442,8 +453,8 @@ function setupModelExplorer() {
   if (!canvas || !viewer) return;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#101415');
-  scene.add(new THREE.HemisphereLight(0xdde8e5, 0x111315, 2.1));
+  scene.background = new THREE.Color('#e0e4e1');
+  scene.add(new THREE.HemisphereLight(0xf4f7f4, 0x9da8a3, 2.1));
   const key = new THREE.DirectionalLight(0xffd4a3, 3.4);
   key.position.set(4, 7, 6);
   scene.add(key);
@@ -469,7 +480,7 @@ function setupModelExplorer() {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.45;
 
-  const grid = new THREE.GridHelper(18, 36, 0x345252, 0x1b2a2b);
+  const grid = new THREE.GridHelper(18, 36, 0x6a8580, 0xaeb9b5);
   grid.position.y = -0.92;
   grid.material.opacity = 0.24;
   grid.material.transparent = true;
@@ -485,12 +496,24 @@ function setupModelExplorer() {
   const focusMaterials = new Set<THREE.Material>();
   const materialCache = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
   const visibilityCache = new Map<THREE.Object3D, boolean>();
+  const homeCameraPosition = new THREE.Vector3();
+  const homeCameraTarget = new THREE.Vector3();
+  const homeMinDistance = controls.minDistance;
+  const homeMaxDistance = controls.maxDistance;
   type WaveNode = { mesh: THREE.Mesh; phase: number; duration: number; maxScale: number; baseOpacity: number };
   type SensorPoint = { mesh: THREE.Mesh; phase: number };
   const waveNodes: WaveNode[] = [];
   const sensorPoints: SensorPoint[] = [];
   const waveClock = new THREE.Clock();
   let sensorWaveGroup: THREE.Group | null = null;
+  type DoorRig = { node: THREE.Object3D; direction: number; baseRotation: number };
+  const doorRigs: DoorRig[] = [];
+  let tailgateRig: { node: THREE.Object3D; baseRotation: number } | null = null;
+  let doorsOpen = 0;
+  let doorsOpenTarget = 0;
+  let tailgateOpen = 0;
+  let tailgateOpenTarget = 0;
+  let lightsOn = false;
 
   const createRadarWave = (group: THREE.Group, position: THREE.Vector3, rotation: THREE.Euler, color: number, maxRadius: number, phase: number, duration: number, ellipse = 1) => {
     const geometry = new THREE.RingGeometry(0.06, 0.085, 64);
@@ -546,6 +569,48 @@ function setupModelExplorer() {
     if (loadingLabel && label) loadingLabel.textContent = label;
   };
 
+  const applyBlackVehicleFinish = (material: THREE.Material) => {
+    if (material.name.toLowerCase() !== 'paint_multicoat') return;
+    if (!(material instanceof THREE.MeshPhysicalMaterial)) return;
+    material.color.set('#080a0a');
+    material.metalness = 0.52;
+    material.roughness = 0.24;
+    material.clearcoat = 0.36;
+    material.clearcoatRoughness = 0.16;
+  };
+
+  const applyLightStateToMaterial = (material: THREE.Material) => {
+    const name = material.name.toLowerCase();
+    const isHeadlight = name.includes('daylight_led') || name.includes('daylight');
+    const isTailLight = name.includes('tail_optics_red') || name.includes('tail_optics');
+    if (!isHeadlight && !isTailLight) return;
+    if (!(material instanceof THREE.MeshStandardMaterial)) return;
+    material.emissiveIntensity = lightsOn ? (isTailLight ? 2.1 : 1.7) : 0.06;
+  };
+
+  const applyLightState = () => {
+    materialCache.forEach((material) => {
+      const materials = Array.isArray(material) ? material : [material];
+      materials.forEach(applyLightStateToMaterial);
+    });
+    modelRoot?.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach(applyLightStateToMaterial);
+    });
+  };
+
+  const updateModelActions = (deltaSeconds: number) => {
+    doorsOpen = THREE.MathUtils.damp(doorsOpen, doorsOpenTarget, 8, deltaSeconds);
+    tailgateOpen = THREE.MathUtils.damp(tailgateOpen, tailgateOpenTarget, 8, deltaSeconds);
+    doorRigs.forEach(({ node, direction, baseRotation }) => {
+      node.rotation.y = baseRotation + direction * doorsOpen * 0.72;
+    });
+    if (tailgateRig) {
+      tailgateRig.node.rotation.z = tailgateRig.baseRotation - tailgateOpen * 0.95;
+    }
+  };
+
   const loader = new GLTFLoader();
   loader.load('/assets/yaojing-s9.glb', (gltf) => {
     modelRoot = gltf.scene;
@@ -554,10 +619,23 @@ function setupModelExplorer() {
       if (object instanceof THREE.Mesh) {
         object.castShadow = false;
         object.receiveShadow = false;
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach(applyBlackVehicleFinish);
         materialCache.set(object, object.material);
       }
       visibilityCache.set(object, object.visible);
     });
+    const registerDoor = (name: string, direction: number) => {
+      const node = modelRoot?.getObjectByName(name);
+      if (node) doorRigs.push({ node, direction, baseRotation: node.rotation.y });
+    };
+    registerDoor('Door_FL', -1);
+    registerDoor('Door_RL', -1);
+    registerDoor('Door_FR', 1);
+    registerDoor('Door_RR', 1);
+    const tailgateNode = modelRoot.getObjectByName('Tailgate');
+    if (tailgateNode) tailgateRig = { node: tailgateNode, baseRotation: tailgateNode.rotation.z };
+    applyLightState();
     const bounds = new THREE.Box3().setFromObject(modelRoot);
     const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
@@ -595,6 +673,8 @@ function setupModelExplorer() {
     [0.35, 0.81].forEach((phase) => createRadarWave(sensorWaveGroup!, rightSensor, new THREE.Euler(0, 0, 0), 0x91d8d0, size.y * 0.32, phase, 1.25, 0.66));
     controls.target.set(0, size.y * scale * 0.38, 0);
     controls.update();
+    homeCameraPosition.copy(camera.position);
+    homeCameraTarget.copy(controls.target);
     updateLoading(100, '结构数据已载入');
     loading?.classList.add('is-complete');
     if (modelStatus) modelStatus.textContent = 'LIVE / READY';
@@ -652,6 +732,33 @@ function setupModelExplorer() {
     return /adas|lidar|camera|radar|sensor|driver_display|center_display/.test(name);
   };
 
+  const fitFocusCamera = (focus: FocusKey) => {
+    if (!modelRoot) return;
+    if (focus === 'all') {
+      camera.position.copy(homeCameraPosition);
+      controls.target.copy(homeCameraTarget);
+      controls.minDistance = homeMinDistance;
+      controls.maxDistance = homeMaxDistance;
+      controls.update();
+      return;
+    }
+    const rootName = focus === 'battery' ? 'BatteryPack' : focus === 'cabin' ? 'Cabin' : 'ADAS';
+    const focusRoot = modelRoot.getObjectByName(rootName);
+    if (!focusRoot) return;
+    const bounds = new THREE.Box3().setFromObject(focusRoot);
+    if (bounds.isEmpty()) return;
+    const center = bounds.getCenter(new THREE.Vector3());
+    const size = bounds.getSize(new THREE.Vector3());
+    const maxDimension = Math.max(size.x, size.y, size.z);
+    const direction = camera.position.clone().sub(controls.target).normalize();
+    const distance = Math.max(maxDimension * (focus === 'battery' ? 1.9 : 1.65), 3.2);
+    camera.position.copy(center).add(direction.multiplyScalar(distance));
+    controls.target.copy(center);
+    controls.minDistance = Math.max(1.2, maxDimension * 0.65);
+    controls.maxDistance = Math.max(8, maxDimension * 4.5);
+    controls.update();
+  };
+
   const restoreMaterials = () => {
     materialCache.forEach((material, mesh) => { mesh.material = material; });
     visibilityCache.forEach((visible, object) => { object.visible = visible; });
@@ -688,7 +795,7 @@ function setupModelExplorer() {
               : selected
                 ? 1
                 : 0.08;
-          if (isCabinBackground) copy.depthWrite = false;
+          if (!selected || isCabinBackground) copy.depthWrite = false;
           if (focus === 'adas' && isVehicleLight && 'emissive' in copy) {
             const emissiveMaterial = copy as THREE.MeshStandardMaterial;
             emissiveMaterial.emissive.set(0x000000);
@@ -712,6 +819,7 @@ function setupModelExplorer() {
     adasOverlay?.classList.toggle('is-visible', isAdas);
     adasOverlay?.setAttribute('aria-hidden', String(!isAdas));
     if (modelStatus) modelStatus.textContent = isAdas ? 'SENSORS / SCANNING' : 'LIVE / READY';
+    fitFocusCamera(focus);
     document.querySelector<HTMLElement>('[data-focus-index]')?.replaceChildren(document.createTextNode(data.index));
     const title = document.querySelector<HTMLElement>('[data-focus-title]');
     const copy = document.querySelector<HTMLElement>('[data-focus-copy]');
@@ -733,6 +841,34 @@ function setupModelExplorer() {
     });
   });
 
+  const updateActionButton = (action: string, isActive: boolean) => {
+    const button = document.querySelector<HTMLButtonElement>(`[data-model-action="${action}"]`);
+    const label = document.querySelector<HTMLElement>(`[data-action-label="${action}"]`);
+    button?.classList.toggle('is-active', isActive);
+    button?.setAttribute('aria-pressed', String(isActive));
+    if (label) label.textContent = isActive ? '关闭' : '打开';
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-model-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.modelAction;
+      if (action === 'doors') {
+        doorsOpenTarget = doorsOpenTarget > 0.5 ? 0 : 1;
+        updateActionButton(action, doorsOpenTarget > 0.5);
+      }
+      if (action === 'tailgate') {
+        tailgateOpenTarget = tailgateOpenTarget > 0.5 ? 0 : 1;
+        updateActionButton(action, tailgateOpenTarget > 0.5);
+      }
+      if (action === 'lights') {
+        lightsOn = !lightsOn;
+        applyLightState();
+        updateActionButton(action, lightsOn);
+        setFocus(activeFocus);
+      }
+    });
+  });
+
   const resize = () => {
     const width = viewer.clientWidth || window.innerWidth;
     const height = viewer.clientHeight || window.innerHeight;
@@ -750,6 +886,7 @@ function setupModelExplorer() {
   renderer.setAnimationLoop(() => {
     const deltaSeconds = Math.min(waveClock.getDelta(), 0.05);
     controls.update();
+    updateModelActions(deltaSeconds);
     updateRadarWaves(deltaSeconds);
     renderer.render(scene, camera);
   });
