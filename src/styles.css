@@ -186,6 +186,15 @@
   .explode-hud { position: absolute; left: 24px; top: 52px; z-index: 2; display: grid; gap: 3px; padding-left: 10px; border-left: 2px solid var(--viewer-amber); color: rgba(29,41,38,.72); font-family: var(--mono); font-size: 9px; letter-spacing: .12em; opacity: 0; transform: translateY(-5px); transition: opacity .3s ease, transform .3s ease; pointer-events: none; }
   .explode-hud.is-visible { opacity: 1; transform: translateY(0); }
   .explode-hud b { color: var(--viewer-cyan); font-size: 8px; font-weight: 400; letter-spacing: .08em; }
+  .part-popup { position: absolute; top: 82px; right: 24px; z-index: 5; width: min(280px, calc(100% - 48px)); padding: 18px 18px 16px; color: var(--viewer-text); background: rgba(244,247,244,.94); border: 1px solid rgba(29,41,38,.24); box-shadow: 0 18px 42px rgba(30,43,39,.18); backdrop-filter: blur(12px); opacity: 0; pointer-events: none; transform: translateY(-8px) scale(.98); transition: opacity .25s ease, transform .25s ease; }
+  .part-popup.is-visible { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+  .part-popup__close { position: absolute; top: 8px; right: 10px; width: 24px; height: 24px; color: var(--viewer-muted); background: transparent; font-size: 20px; line-height: 1; }
+  .part-popup__close:hover { color: var(--viewer-text); }
+  .part-popup__eyebrow { color: var(--viewer-cyan); font-family: var(--mono); font-size: 9px; letter-spacing: .13em; }
+  .part-popup h3 { max-width: 210px; margin-top: 9px; color: var(--viewer-text); font-family: var(--display); font-size: 24px; font-weight: 500; letter-spacing: -.04em; line-height: 1.05; }
+  .part-popup p { margin-top: 10px; color: var(--viewer-muted); font-size: 12px; line-height: 1.65; }
+  .part-popup__facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
+  .part-popup__facts span { padding: 5px 7px; color: var(--viewer-muted); background: rgba(20,123,120,.08); border: 1px solid rgba(20,123,120,.2); font-family: var(--mono); font-size: 9px; }
   .explore-detail { margin-top: 32px; }
   .explore-detail__index { color: var(--amber); font-family: var(--mono); font-size: 10px; letter-spacing: .12em; }
   .explore-detail h3 { margin-top: 12px; font-family: var(--display); font-size: clamp(1.8rem, 3vw, 3.2rem); font-weight: 400; letter-spacing: -.04em; }

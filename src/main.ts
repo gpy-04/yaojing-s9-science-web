@@ -257,6 +257,13 @@ app.innerHTML = `
           <div class="explode-hud" data-explode-hud aria-hidden="true">
             <span>EXPLODED ASSEMBLY</span><b>24 GROUPS / PICK ANY PART</b>
           </div>
+          <aside class="part-popup" data-part-popup aria-hidden="true">
+            <button class="part-popup__close" type="button" data-part-popup-close aria-label="关闭零件信息">×</button>
+            <div class="part-popup__eyebrow">PICKED PART / NODE</div>
+            <h3 data-popup-part-name>点击模型中的零件</h3>
+            <p data-popup-part-copy>点击任意可见零件查看它所属的系统与结构作用。</p>
+            <div class="part-popup__facts" data-popup-part-facts><span>等待选择</span></div>
+          </aside>
           <div class="adas-overlay" data-adas-overlay aria-hidden="true">
             <div class="adas-overlay__status"><span class="adas-pulse-dot"></span><span>RADAR PULSE / ACTIVE</span></div>
             <div class="adas-overlay__legend"><span><i class="legend-mark legend-mark--cyan"></i>超声波</span><span><i class="legend-mark legend-mark--amber"></i>毫米波雷达</span><span><i class="legend-mark legend-mark--white"></i>目标回波</span></div>
@@ -576,6 +583,7 @@ function setupModelExplorer() {
   let explosionTarget = 0;
   const explosionRaycaster = new THREE.Raycaster();
   const explosionPointer = new THREE.Vector2();
+  const pointerDownPosition = new THREE.Vector2();
   const selectionMaterialCache = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
   let selectedPartMesh: THREE.Mesh | null = null;
 
@@ -671,6 +679,9 @@ function setupModelExplorer() {
     const inspector = document.querySelector<HTMLElement>('[data-part-inspector]');
     inspector?.classList.remove('is-visible');
     inspector?.setAttribute('aria-hidden', 'true');
+    const popup = document.querySelector<HTMLElement>('[data-part-popup]');
+    popup?.classList.remove('is-visible');
+    popup?.setAttribute('aria-hidden', 'true');
   };
 
   const highlightPart = (mesh: THREE.Mesh) => {
@@ -696,13 +707,25 @@ function setupModelExplorer() {
     const name = document.querySelector<HTMLElement>('[data-part-name]');
     const copy = document.querySelector<HTMLElement>('[data-part-copy]');
     const facts = document.querySelector<HTMLElement>('[data-part-facts]');
+    const popup = document.querySelector<HTMLElement>('[data-part-popup]');
+    const popupName = document.querySelector<HTMLElement>('[data-popup-part-name]');
+    const popupCopy = document.querySelector<HTMLElement>('[data-popup-part-copy]');
+    const popupFacts = document.querySelector<HTMLElement>('[data-popup-part-facts]');
     const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-    if (name) name.textContent = humanizeNodeName(mesh.name) || info.label;
-    if (copy) copy.textContent = `${info.description} 当前选中：${info.label}。`;
-    if (facts) facts.innerHTML = [['系统', info.system], ['装配', info.label], ['材质', material?.name || '未命名材质']].map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
+    const partName = humanizeNodeName(mesh.name) || info.label;
+    const partCopy = `${info.description} 当前选中：${info.label}。`;
+    const partFacts = [['系统', info.system], ['装配', info.label], ['材质', material?.name || '未命名材质']];
+    if (name) name.textContent = partName;
+    if (copy) copy.textContent = partCopy;
+    if (facts) facts.innerHTML = partFacts.map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
+    if (popupName) popupName.textContent = partName;
+    if (popupCopy) popupCopy.textContent = partCopy;
+    if (popupFacts) popupFacts.innerHTML = partFacts.map(([label, value]) => `<span>${label} / ${value}</span>`).join('');
+    highlightPart(mesh);
     inspector?.classList.add('is-visible');
     inspector?.setAttribute('aria-hidden', 'false');
-    highlightPart(mesh);
+    popup?.classList.add('is-visible');
+    popup?.setAttribute('aria-hidden', 'false');
   };
 
   const pickModelPart = (event: PointerEvent) => {
@@ -1069,9 +1092,14 @@ function setupModelExplorer() {
   };
   explodeToggle?.addEventListener('click', () => setExploded(explosionTarget < 0.5));
   explodeReset?.addEventListener('click', () => setExploded(false));
-  canvas.addEventListener('pointerup', (event) => {
-    if (explosionTarget > 0.1 || explosionProgress > 0.1) pickModelPart(event);
+  canvas.addEventListener('pointerdown', (event) => {
+    pointerDownPosition.set(event.clientX, event.clientY);
   });
+  canvas.addEventListener('pointerup', (event) => {
+    const moved = Math.hypot(event.clientX - pointerDownPosition.x, event.clientY - pointerDownPosition.y);
+    if (moved < 8) pickModelPart(event);
+  });
+  document.querySelector<HTMLButtonElement>('[data-part-popup-close]')?.addEventListener('click', clearSelectedPart);
 
   const resize = () => {
     const width = viewer.clientWidth || window.innerWidth;
