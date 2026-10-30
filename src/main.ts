@@ -392,6 +392,11 @@ const pageMeta: Record<string, { number: string; label: string }> = {
 };
 
 function showPage(page: string) {
+  const isExplore = page === 'explore';
+  // Keep the immersive model chapter locked to the viewport while the
+  // history chapter retains its long-form document scrolling behavior.
+  document.documentElement.classList.toggle('page-explore', isExplore);
+  document.body.classList.toggle('page-explore', isExplore);
   document.querySelectorAll<HTMLElement>('[data-page]').forEach((section) => {
     const active = section.dataset.page === page;
     section.classList.toggle('is-active', active);
@@ -525,8 +530,15 @@ function setupModelExplorer() {
   scene.add(rim);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-  const mobile = matchMedia('(max-width: 760px)').matches;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.35 : 1.8));
+  const mobileQuery = matchMedia('(max-width: 760px)');
+  const updateRendererPixelRatio = () => {
+    // Keep the GL buffer proportional to the current viewport. This also
+    // handles responsive preview resizing and device rotation without leaving
+    // a desktop-sized buffer running behind a phone layout.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobileQuery.matches ? 1.35 : 1.8));
+  };
+  updateRendererPixelRatio();
+  mobileQuery.addEventListener('change', updateRendererPixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
@@ -1106,6 +1118,7 @@ function setupModelExplorer() {
     const height = viewer.clientHeight || window.innerHeight;
     camera.aspect = width / Math.max(height, 1);
     camera.updateProjectionMatrix();
+    updateRendererPixelRatio();
     renderer.setSize(width, height, false);
   };
   const resizeObserver = new ResizeObserver(resize);
