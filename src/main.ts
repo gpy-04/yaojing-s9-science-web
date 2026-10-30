@@ -254,6 +254,9 @@ app.innerHTML = `
           </div>
           <div class="model-hint">拖拽旋转 · 滚轮缩放 · 点击右侧模块聚焦</div>
           <div class="model-status" data-model-status>等待模型</div>
+          <div class="explode-hud" data-explode-hud aria-hidden="true">
+            <span>EXPLODED ASSEMBLY</span><b>24 GROUPS / PICK ANY PART</b>
+          </div>
           <div class="adas-overlay" data-adas-overlay aria-hidden="true">
             <div class="adas-overlay__status"><span class="adas-pulse-dot"></span><span>RADAR PULSE / ACTIVE</span></div>
             <div class="adas-overlay__legend"><span><i class="legend-mark legend-mark--cyan"></i>超声波</span><span><i class="legend-mark legend-mark--amber"></i>毫米波雷达</span><span><i class="legend-mark legend-mark--white"></i>目标回波</span></div>
@@ -283,6 +286,14 @@ app.innerHTML = `
               <span class="model-action__glyph">◉</span><span><strong>车灯</strong><small data-action-label="lights">打开</small></span>
             </button>
           </div>
+          <div class="explode-controls" aria-label="爆炸图控制">
+            <button class="explode-toggle" type="button" data-explode-toggle aria-pressed="false">
+              <span class="explode-toggle__eyebrow">STRUCTURE / EXPLODE</span>
+              <strong data-explode-label>打开爆炸图</strong>
+              <small>按装配层级展开，点击零件查询信息</small>
+            </button>
+            <button class="explode-reset" type="button" data-explode-reset aria-label="重置爆炸图">↺</button>
+          </div>
           <div class="explore-detail" data-focus-detail>
             <div class="explore-detail__index" data-focus-index>SYSTEM 01 / 04</div>
             <h3 data-focus-title>整车结构</h3>
@@ -291,6 +302,16 @@ app.innerHTML = `
               <div><dt>模型</dt><dd>EV SUV</dd></div>
               <div><dt>节点</dt><dd>802</dd></div>
               <div><dt>材质</dt><dd>19 组</dd></div>
+            </dl>
+          </div>
+          <div class="part-inspector" data-part-inspector aria-live="polite" aria-hidden="true">
+            <div class="part-inspector__eyebrow">PICKED PART / NODE</div>
+            <h3 data-part-name>点击模型中的零件</h3>
+            <p data-part-copy>打开爆炸图后，点击任意零件查看它所属的系统与结构作用。</p>
+            <dl class="explore-facts" data-part-facts>
+              <div><dt>系统</dt><dd>等待选择</dd></div>
+              <div><dt>装配</dt><dd>—</dd></div>
+              <div><dt>材质</dt><dd>—</dd></div>
             </dl>
           </div>
           <div class="explore-footer"><button class="text-button" type="button" data-next="history">返回共同进化 <span>↗</span></button><span class="model-credit">GLB / CC BY 4.0 + original systems</span></div>
@@ -447,6 +468,40 @@ const focusCopy: Record<FocusKey, { index: string; title: string; copy: string; 
   adas: { index: 'SYSTEM 04 / 04', title: '智驾感知', copy: '摄像头、雷达与光学窗口构成车辆的感知层。波纹从车身上的传感器向外扩散，模拟它如何测量距离、方向和目标回波，再把环境交给计算系统判断。', facts: [['输入', '光学 / 距离'], ['波形', '超声 / 雷达'], ['状态', '扫描中']] },
 };
 
+const assemblyInfo: Record<string, { label: string; system: string; description: string }> = {
+  ADAS: { label: '智驾感知装配', system: '感知系统', description: '摄像头、激光雷达和超声波传感器共同构成车辆的环境输入层。' },
+  BatteryPack: { label: '动力电池包', system: '能源系统', description: '位于底盘中央的电池包，为电机和高压附件提供储能与供电。' },
+  BodyStructure: { label: '车身结构', system: '承载系统', description: '车身骨架连接悬架、座舱和外覆盖件，承担载荷传递与碰撞路径。' },
+  Brakes: { label: '制动系统', system: '底盘系统', description: '制动执行器、液压管路与制动机构共同完成减速和停车。' },
+  Cabin: { label: '座舱系统', system: '人机系统', description: '座椅、显示器、方向盘和内饰结构把人的输入转换为可执行指令。' },
+  ChargeHV: { label: '高压充电系统', system: '能源系统', description: '充电接口和高压连接件把外部电能安全送入动力电池。' },
+  Door_FL: { label: '左前车门', system: '车身开合件', description: '包含车门外板、内饰卡板、玻璃和铰链，是前排乘员的进出界面。' },
+  Door_FR: { label: '右前车门', system: '车身开合件', description: '包含车门外板、内饰卡板、玻璃和铰链，是前排乘员的进出界面。' },
+  Door_RL: { label: '左后车门', system: '车身开合件', description: '后排乘员入口与侧围结构的可动覆盖件。' },
+  Door_RR: { label: '右后车门', system: '车身开合件', description: '后排乘员入口与侧围结构的可动覆盖件。' },
+  Exterior: { label: '外饰覆盖', system: '车身外观', description: '外板、灯具开口和装饰件共同形成车辆的可见外轮廓。' },
+  FrontEaxle: { label: '前电驱桥', system: '电驱系统', description: '前部电机、减速机构与高压接口组成前轴驱动单元。' },
+  FrontSuspension: { label: '前悬架', system: '底盘系统', description: '前轮悬架控制车轮跳动、转向响应和车身支撑。' },
+  Hood: { label: '前舱盖', system: '车身开合件', description: '覆盖前舱并通过铰链与车身连接的可动外板。' },
+  RearEaxle: { label: '后电驱桥', system: '电驱系统', description: '后部电机、减速机构与高压接口组成后轴驱动单元。' },
+  RearSuspension: { label: '后悬架', system: '底盘系统', description: '后轮悬架负责车轮定位、路面隔离和车身稳定。' },
+  RoofGlazing: { label: '车顶玻璃', system: '车身外观', description: '车顶采光和玻璃结构，连接车顶开口与乘员视野。' },
+  Steering: { label: '转向系统', system: '底盘系统', description: '方向盘、转向柱和转向执行件把驾驶者输入传递到前轮。' },
+  Tailgate: { label: '后备箱尾门', system: '车身开合件', description: '后部电动尾门及其铰链、撑杆和内衬，提供行李舱开口。' },
+  ThermalHVAC: { label: '热管理与空调', system: '热管理系统', description: '热交换、冷却和空调部件调节电池、座舱与电驱系统的温度。' },
+  Wheel_FL: { label: '左前车轮', system: '底盘系统', description: '轮胎、轮辋和轮毂组件，把悬架运动转换为路面接触。' },
+  Wheel_FR: { label: '右前车轮', system: '底盘系统', description: '轮胎、轮辋和轮毂组件，把悬架运动转换为路面接触。' },
+  Wheel_RL: { label: '左后车轮', system: '底盘系统', description: '轮胎、轮辋和轮毂组件，把悬架运动转换为路面接触。' },
+  Wheel_RR: { label: '右后车轮', system: '底盘系统', description: '轮胎、轮辋和轮毂组件，把悬架运动转换为路面接触。' },
+};
+
+const fallbackExplodeVectors: Record<string, [number, number, number]> = {
+  ADAS: [0, 1.2, 0], BatteryPack: [0, -0.9, 0], BodyStructure: [0, -0.45, 0], Brakes: [0.85, 0.28, 0.4], Cabin: [0, 0.95, 0], ChargeHV: [-0.8, -0.3, 0.45],
+  Door_FL: [0, 0, -0.9], Door_FR: [0, 0, 0.9], Door_RL: [0, 0, -0.9], Door_RR: [0, 0, 0.9], Exterior: [0, 0.9, 0], FrontEaxle: [1.05, 0, 0], FrontSuspension: [0.65, 0, 0], Hood: [0.55, 0.65, 0], RearEaxle: [-1.05, 0, 0], RearSuspension: [-0.65, 0, 0], RoofGlazing: [0, 1.35, 0], Steering: [0.55, 0.35, 0], Tailgate: [-0.8, 0.75, 0], ThermalHVAC: [1.1, -0.25, 0.65], Wheel_FL: [0, 0, -1.05], Wheel_FR: [0, 0, 1.05], Wheel_RL: [0, 0, -1.05], Wheel_RR: [0, 0, 1.05],
+};
+
+const humanizeNodeName = (name: string) => name.replace(/[_-]+/g, ' ').replace(/\b\d+\b/g, '').replace(/\s+/g, ' ').trim() || '未命名零件';
+
 function setupModelExplorer() {
   const canvas = document.querySelector<HTMLCanvasElement>('#model-canvas');
   const viewer = document.querySelector<HTMLElement>('[data-model-viewer]');
@@ -514,6 +569,15 @@ function setupModelExplorer() {
   let tailgateOpen = 0;
   let tailgateOpenTarget = 0;
   let lightsOn = false;
+  type ExplosionRig = { node: THREE.Object3D; basePosition: THREE.Vector3; offset: THREE.Vector3; baseBox: THREE.Box3; key: string };
+  const explosionRigs: ExplosionRig[] = [];
+  let assemblyRoot: THREE.Object3D | null = null;
+  let explosionProgress = 0;
+  let explosionTarget = 0;
+  const explosionRaycaster = new THREE.Raycaster();
+  const explosionPointer = new THREE.Vector2();
+  const selectionMaterialCache = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
+  let selectedPartMesh: THREE.Mesh | null = null;
 
   const createRadarWave = (group: THREE.Group, position: THREE.Vector3, rotation: THREE.Euler, color: number, maxRadius: number, phase: number, duration: number, ellipse = 1) => {
     const geometry = new THREE.RingGeometry(0.06, 0.085, 64);
@@ -600,6 +664,60 @@ function setupModelExplorer() {
     });
   };
 
+  const clearSelectedPart = () => {
+    selectionMaterialCache.forEach((material, mesh) => { mesh.material = material; });
+    selectionMaterialCache.clear();
+    selectedPartMesh = null;
+    const inspector = document.querySelector<HTMLElement>('[data-part-inspector]');
+    inspector?.classList.remove('is-visible');
+    inspector?.setAttribute('aria-hidden', 'true');
+  };
+
+  const highlightPart = (mesh: THREE.Mesh) => {
+    clearSelectedPart();
+    const source = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const highlighted = source.map((material) => {
+      const copy = material.clone();
+      if (copy instanceof THREE.MeshStandardMaterial) {
+        copy.emissive.set('#20b8ad');
+        copy.emissiveIntensity = 0.7;
+      }
+      copy.transparent = true;
+      return copy;
+    });
+    selectionMaterialCache.set(mesh, mesh.material);
+    mesh.material = Array.isArray(mesh.material) ? highlighted : highlighted[0];
+    selectedPartMesh = mesh;
+  };
+
+  const showPartInspector = (mesh: THREE.Mesh, assembly: THREE.Object3D) => {
+    const info = assemblyInfo[assembly.name] ?? { label: humanizeNodeName(assembly.name), system: '结构零件', description: '该零件属于曜境 S9 的结构概念模型，用于展示系统之间的连接关系。' };
+    const inspector = document.querySelector<HTMLElement>('[data-part-inspector]');
+    const name = document.querySelector<HTMLElement>('[data-part-name]');
+    const copy = document.querySelector<HTMLElement>('[data-part-copy]');
+    const facts = document.querySelector<HTMLElement>('[data-part-facts]');
+    const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+    if (name) name.textContent = humanizeNodeName(mesh.name) || info.label;
+    if (copy) copy.textContent = `${info.description} 当前选中：${info.label}。`;
+    if (facts) facts.innerHTML = [['系统', info.system], ['装配', info.label], ['材质', material?.name || '未命名材质']].map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`).join('');
+    inspector?.classList.add('is-visible');
+    inspector?.setAttribute('aria-hidden', 'false');
+    highlightPart(mesh);
+  };
+
+  const pickModelPart = (event: PointerEvent) => {
+    if (!assemblyRoot) return;
+    const rect = canvas.getBoundingClientRect();
+    explosionPointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    explosionPointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    explosionRaycaster.setFromCamera(explosionPointer, camera);
+    const hit = explosionRaycaster.intersectObject(assemblyRoot, true).find((item) => item.object instanceof THREE.Mesh);
+    if (!hit || !(hit.object instanceof THREE.Mesh)) return;
+    let assembly: THREE.Object3D = hit.object;
+    while (assembly.parent && assembly.parent !== assemblyRoot) assembly = assembly.parent;
+    showPartInspector(hit.object, assembly);
+  };
+
   const updateModelActions = (deltaSeconds: number) => {
     doorsOpen = THREE.MathUtils.damp(doorsOpen, doorsOpenTarget, 8, deltaSeconds);
     tailgateOpen = THREE.MathUtils.damp(tailgateOpen, tailgateOpenTarget, 8, deltaSeconds);
@@ -609,6 +727,71 @@ function setupModelExplorer() {
     if (tailgateRig) {
       tailgateRig.node.rotation.z = tailgateRig.baseRotation - tailgateOpen * 0.95;
     }
+  };
+
+  const setExplosionProgress = (progress: number) => {
+    explosionRigs.forEach((rig) => {
+      rig.node.position.copy(rig.basePosition).addScaledVector(rig.offset, progress);
+    });
+    assemblyRoot?.updateMatrixWorld(true);
+  };
+
+  const prepareExplosionRigs = () => {
+    if (!modelRoot) return;
+    assemblyRoot = modelRoot.getObjectByName('EV_SUV') ?? modelRoot.children.find((child) => child.name === 'EV_SUV') ?? null;
+    if (!assemblyRoot) return;
+    assemblyRoot.updateMatrixWorld(true);
+    explosionRigs.length = 0;
+    assemblyRoot.children.forEach((node) => {
+      if (!node.name || node === sensorWaveGroup) return;
+      const raw = (node.userData as { explode_vector_blender_m?: number[] } | undefined)?.explode_vector_blender_m;
+      const fallback = fallbackExplodeVectors[node.name] ?? [0, 0.7, 0];
+      const vector = new THREE.Vector3(
+        Number(raw?.[0] ?? fallback[0]),
+        Number(raw?.[1] ?? fallback[1]),
+        Number(raw?.[2] ?? fallback[2]),
+      ).multiplyScalar(1.55);
+      explosionRigs.push({ node, basePosition: node.position.clone(), offset: vector, baseBox: new THREE.Box3().setFromObject(node), key: node.name });
+    });
+
+    // Use the authored vectors first, then push overlapping assembly boxes apart.
+    // The correction runs once, so the animation remains cheap while its final state is separated.
+    for (let round = 0; round < 7; round += 1) {
+      setExplosionProgress(1);
+      const boxes = explosionRigs.map((rig) => new THREE.Box3().setFromObject(rig.node));
+      let corrected = false;
+      for (let i = 0; i < explosionRigs.length; i += 1) {
+        for (let j = i + 1; j < explosionRigs.length; j += 1) {
+          const first = boxes[i];
+          const second = boxes[j];
+          if (!first.intersectsBox(second)) continue;
+          const firstCenter = first.getCenter(new THREE.Vector3());
+          const secondCenter = second.getCenter(new THREE.Vector3());
+          const delta = firstCenter.sub(secondCenter);
+          const axis = Math.abs(delta.x) > Math.abs(delta.y) && Math.abs(delta.x) > Math.abs(delta.z) ? 'x' : Math.abs(delta.y) > Math.abs(delta.z) ? 'y' : 'z';
+          const firstMin = first.min[axis];
+          const firstMax = first.max[axis];
+          const secondMin = second.min[axis];
+          const secondMax = second.max[axis];
+          const overlap = Math.min(firstMax, secondMax) - Math.max(firstMin, secondMin) + 0.1;
+          if (overlap <= 0) continue;
+          const sign = delta[axis] === 0 ? (i % 2 === 0 ? 1 : -1) : Math.sign(delta[axis]);
+          const correction = overlap / Math.max(modelRoot.scale.x, 0.0001) * 0.55;
+          const push = new THREE.Vector3();
+          push[axis] = sign * correction;
+          explosionRigs[i].offset.add(push);
+          explosionRigs[j].offset.sub(push);
+          corrected = true;
+        }
+      }
+      if (!corrected) break;
+    }
+    setExplosionProgress(0);
+  };
+
+  const updateExplosion = (deltaSeconds: number) => {
+    explosionProgress = THREE.MathUtils.damp(explosionProgress, explosionTarget, 5.5, deltaSeconds);
+    setExplosionProgress(explosionProgress);
   };
 
   const loader = new GLTFLoader();
@@ -671,6 +854,7 @@ function setupModelExplorer() {
     [0, 0.34, 0.68].forEach((phase) => createRadarWave(sensorWaveGroup!, frontSensor, new THREE.Euler(0, Math.PI / 2, 0), 0x91d8d0, size.y * 0.52, phase, 1.65, 0.48));
     [0.12, 0.58].forEach((phase) => createRadarWave(sensorWaveGroup!, leftSensor, new THREE.Euler(0, 0, 0), 0x91d8d0, size.y * 0.32, phase, 1.25, 0.66));
     [0.35, 0.81].forEach((phase) => createRadarWave(sensorWaveGroup!, rightSensor, new THREE.Euler(0, 0, 0), 0x91d8d0, size.y * 0.32, phase, 1.25, 0.66));
+    prepareExplosionRigs();
     controls.target.set(0, size.y * scale * 0.38, 0);
     controls.update();
     homeCameraPosition.copy(camera.position);
@@ -768,6 +952,7 @@ function setupModelExplorer() {
 
   const setFocus = (focus: FocusKey) => {
     activeFocus = focus;
+    clearSelectedPart();
     if (modelRoot) {
       restoreMaterials();
     }
@@ -869,6 +1054,25 @@ function setupModelExplorer() {
     });
   });
 
+  const explodeToggle = document.querySelector<HTMLButtonElement>('[data-explode-toggle]');
+  const explodeReset = document.querySelector<HTMLButtonElement>('[data-explode-reset]');
+  const explodeLabel = document.querySelector<HTMLElement>('[data-explode-label]');
+  const explodeHud = document.querySelector<HTMLElement>('[data-explode-hud]');
+  const setExploded = (open: boolean) => {
+    explosionTarget = open ? 1 : 0;
+    explodeToggle?.classList.toggle('is-active', open);
+    explodeToggle?.setAttribute('aria-pressed', String(open));
+    if (explodeLabel) explodeLabel.textContent = open ? '关闭爆炸图' : '打开爆炸图';
+    explodeHud?.classList.toggle('is-visible', open);
+    explodeHud?.setAttribute('aria-hidden', String(!open));
+    if (!open) clearSelectedPart();
+  };
+  explodeToggle?.addEventListener('click', () => setExploded(explosionTarget < 0.5));
+  explodeReset?.addEventListener('click', () => setExploded(false));
+  canvas.addEventListener('pointerup', (event) => {
+    if (explosionTarget > 0.1 || explosionProgress > 0.1) pickModelPart(event);
+  });
+
   const resize = () => {
     const width = viewer.clientWidth || window.innerWidth;
     const height = viewer.clientHeight || window.innerHeight;
@@ -887,6 +1091,7 @@ function setupModelExplorer() {
     const deltaSeconds = Math.min(waveClock.getDelta(), 0.05);
     controls.update();
     updateModelActions(deltaSeconds);
+    updateExplosion(deltaSeconds);
     updateRadarWaves(deltaSeconds);
     renderer.render(scene, camera);
   });
