@@ -393,7 +393,7 @@ app.innerHTML = `
             <h2>让车学会<br /><em>躲开世界。</em></h2>
             <p>驾驶曜境 S9 穿过不断变化的交通流。连续躲避来车会积攒能量，充满后开启智驾模式，让车辆自动寻找安全路线。坚持越久，得分越高。</p>
             <button class="game-primary-button" type="button" data-game-start><span>开始驾驶</span><b>↗</b></button>
-            <div class="game-instructions"><span><kbd>A</kbd><kbd>D</kbd> 或 ← → 换道</span><span>空格 暂停</span></div>
+            <div class="game-instructions"><span><kbd>A</kbd><kbd>D</kbd> 或 ← → 换道</span><span><kbd>空格</kbd> 智驾 / <kbd>P</kbd> 暂停</span></div>
           </div>
           <div class="game-over-screen" data-game-over aria-hidden="true">
             <p class="eyebrow">RUN COMPLETE / RESULT</p>
