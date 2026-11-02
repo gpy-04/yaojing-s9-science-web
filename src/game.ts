@@ -379,7 +379,11 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
       return;
     }
     autopilot = enabled;
-    if (autopilot) energy = Math.max(0, energy - 100);
+    // A full bar is the fuel reserve for autonomous driving. Keep it at 100%
+    // when the mode is engaged, then consume it continuously in update().
+    // Subtracting the activation cost here would disable autopilot on its
+    // first frame because the energy bar would immediately reach zero.
+    if (autopilot) energy = 100;
     if (mode !== 'crashed' && !paused) setMode(autopilot ? 'autopilot' : 'manual');
     updateUi();
   };
