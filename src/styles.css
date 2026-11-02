@@ -632,6 +632,10 @@ body.page-game {
   color: var(--game-ink);
   background: radial-gradient(circle at 66% 15%, rgba(36, 100, 94, .24), transparent 38%), linear-gradient(145deg, #0b1415 0%, #101c1d 46%, #071010 100%);
 }
+.page-game, .page-game body { height: 100svh; overflow: hidden; overscroll-behavior: none; }
+.page-game .site-shell { height: 100svh; min-height: 100svh; overflow: hidden; }
+.page-game .chapter--game { height: 100svh; min-height: 100svh; overflow: hidden; }
+.page-game .chapter--game > .history-footer { display: none; }
 .chapter--game.is-active { display: block; }
 .game-shell { position: relative; display: grid; min-height: 100svh; isolation: isolate; }
 .game-stage { position: relative; min-height: 100svh; overflow: hidden; background: linear-gradient(180deg, rgba(8, 18, 19, .46), transparent 32%, rgba(4, 10, 10, .7)), radial-gradient(ellipse at 50% 62%, rgba(54, 102, 98, .22), transparent 52%); }
