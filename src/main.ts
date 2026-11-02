@@ -180,7 +180,7 @@ app.innerHTML = `
       <div class="chapter-indicator" aria-label="当前章节">
         <span class="chapter-indicator__active" data-chapter-number>01</span>
         <span class="chapter-indicator__slash">/</span>
-        <span>02</span>
+        <span>03</span>
         <span class="chapter-indicator__label" data-chapter-label>共同进化</span>
       </div>
       <button class="menu-button" type="button" aria-label="打开章节菜单" data-menu-button>
@@ -194,6 +194,9 @@ app.innerHTML = `
       </button>
       <button class="chapter-menu__item" type="button" data-go="explore">
         <span>02</span><strong>打开曜境 S9</strong><small>结构 × 感知</small>
+      </button>
+      <button class="chapter-menu__item" type="button" data-go="game">
+        <span>03</span><strong>智驾逃逸场</strong><small>躲避 × 能量 × 自驾</small>
       </button>
     </nav>
 
@@ -368,6 +371,54 @@ app.innerHTML = `
       </div>
       <div class="history-footer"><span>INTERACTIVE MODEL / COMING NEXT</span><span class="scroll-line"></span><span>02</span></div>
     </section>
+
+    <section class="chapter chapter--game" id="game" data-page="game" aria-hidden="true">
+      <div class="game-shell">
+        <div class="game-stage" data-game-stage>
+          <canvas id="game-canvas" aria-label="曜境 S9 智驾躲避游戏"></canvas>
+          <div class="game-stage__grid" aria-hidden="true"></div>
+          <div class="game-stage__scanline" aria-hidden="true"></div>
+          <div class="game-topline"><span>YJ / S9</span><span>CHAPTER 03 · AUTONOMOUS RUN</span></div>
+          <div class="game-hud" aria-live="polite">
+            <div class="game-hud__metric"><span>TIME</span><strong data-game-time>00:00</strong></div>
+            <div class="game-hud__metric"><span>SCORE</span><strong data-game-score>0000</strong></div>
+            <div class="game-hud__metric game-hud__metric--energy"><span>ENERGY</span><strong data-game-energy>0%</strong><i class="game-energy-bar"><b data-game-energy-bar></b></i></div>
+            <div class="game-hud__mode" data-game-mode>MANUAL CONTROL</div>
+          </div>
+          <div class="game-crosshair" aria-hidden="true"><span></span><i></i></div>
+          <div class="game-message" data-game-message aria-live="polite">准备进入道路</div>
+          <div class="game-start-screen" data-game-start-screen>
+            <p class="eyebrow">CHAPTER 03 / AUTONOMOUS RUN</p>
+            <h2>让车学会<br /><em>躲开世界。</em></h2>
+            <p>驾驶曜境 S9 穿过不断变化的交通流。连续躲避来车会积攒能量，充满后开启智驾模式，让车辆自动寻找安全路线。坚持越久，得分越高。</p>
+            <button class="game-primary-button" type="button" data-game-start><span>开始驾驶</span><b>↗</b></button>
+            <div class="game-instructions"><span><kbd>A</kbd><kbd>D</kbd> 或 ← → 换道</span><span>空格 暂停</span></div>
+          </div>
+          <div class="game-over-screen" data-game-over aria-hidden="true">
+            <p class="eyebrow">RUN COMPLETE / RESULT</p>
+            <h2 data-game-result>旅程结束</h2>
+            <div class="game-result-grid"><div><span>生存时间</span><strong data-game-result-time>00:00</strong></div><div><span>最终得分</span><strong data-game-result-score>0000</strong></div><div><span>躲避车辆</span><strong data-game-result-dodged>00</strong></div></div>
+            <button class="game-primary-button" type="button" data-game-restart><span>再次出发</span><b>↗</b></button>
+          </div>
+        </div>
+        <aside class="game-panel">
+          <div class="game-panel__intro">
+            <p class="eyebrow">CHAPTER 03 / PLAY THE SYSTEM</p>
+            <h2>智驾逃逸场</h2>
+            <p>把第二章的曜境 S9 变成玩家的座驾。你负责判断车道与风险，系统负责把每一次躲避记入能量与时间。</p>
+          </div>
+          <div class="game-status-card"><span class="game-status-card__label">CURRENT STATE</span><strong data-game-status>待机 / 等待出发</strong><p data-game-status-copy>道路上的车辆会从前方驶来。保持移动，寻找空出的车道。</p></div>
+          <div class="game-controls" aria-label="游戏控制">
+            <button class="game-lane-button" type="button" data-game-lane="left" aria-label="向左换道"><span>←</span><small>左移</small></button>
+            <button class="game-pause-button" type="button" data-game-pause><span>Ⅱ</span><small>暂停</small></button>
+            <button class="game-lane-button" type="button" data-game-lane="right" aria-label="向右换道"><span>→</span><small>右移</small></button>
+          </div>
+          <div class="game-rules"><span>PLAY RULES</span><p>躲避车辆 +10 分 · 连续躲避积攒能量 · 能量满格后自动进入智驾模式 · 智驾持续时间按存活时间计分。</p></div>
+          <div class="game-footer"><button class="text-button" type="button" data-next="explore">返回结构探索 <span>↗</span></button><span>REALTIME / THREE.JS</span></div>
+        </aside>
+      </div>
+      <div class="history-footer"><span>DRIVE / DODGE / ADAPT</span><span class="scroll-line"></span><span>03</span></div>
+    </section>
   </main>
 `;
 
@@ -433,14 +484,18 @@ const menuItems = [...document.querySelectorAll<HTMLButtonElement>('[data-go]')]
 const pageMeta: Record<string, { number: string; label: string }> = {
   history: { number: '01', label: '机器感知博物馆' },
   explore: { number: '02', label: '打开曜境 S9' },
+  game: { number: '03', label: '智驾逃逸场' },
 };
 
 function showPage(page: string) {
   const isExplore = page === 'explore';
+  const isGame = page === 'game';
   // Keep the immersive model chapter locked to the viewport while the
   // history chapter retains its long-form document scrolling behavior.
   document.documentElement.classList.toggle('page-explore', isExplore);
   document.body.classList.toggle('page-explore', isExplore);
+  document.documentElement.classList.toggle('page-game', isGame);
+  document.body.classList.toggle('page-game', isGame);
   document.querySelectorAll<HTMLElement>('[data-page]').forEach((section) => {
     const active = section.dataset.page === page;
     section.classList.toggle('is-active', active);
@@ -514,7 +569,8 @@ document.querySelectorAll<HTMLButtonElement>('.timeline-event').forEach((eventBu
   });
 });
 
-showPage(window.location.hash === '#explore' ? 'explore' : 'history');
+const initialPage = window.location.hash === '#explore' ? 'explore' : window.location.hash === '#game' ? 'game' : 'history';
+showPage(initialPage);
 
 type FocusKey = 'all' | 'battery' | 'cabin' | 'adas';
 
