@@ -183,8 +183,11 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   scene.fog = new THREE.Fog(0x111b1f, 45, 180);
 
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
-  camera.position.set(0, 5.7, 9.7);
-  camera.lookAt(0, 1, -24);
+  // The player vehicle is the visual anchor of this chapter. Keep the chase
+  // camera close enough that the imported GLB reads as a real car instead of
+  // a tiny silhouette at the bottom of the road.
+  camera.position.set(0, 4.55, 4.8);
+  camera.lookAt(0, 0.9, -14.5);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -212,7 +215,11 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   const road = createRoad(scene);
   const player = new THREE.Group();
   player.name = 'PlayerVehicle';
-  player.position.set(0, 0.05, 4.7);
+  // Keep the player car inside the camera's near field. The road is authored
+  // along -Z and the camera is pitched toward the traffic stream; placing the
+  // vehicle at z=4.7 put it below the lower edge of the frustum, making a
+  // successfully loaded GLB look like it had not been imported.
+  player.position.set(0, 0.05, -3.4);
   scene.add(player);
   const fallbackPlayer = createProceduralCar(0x080b0e, 1.02);
   player.add(fallbackPlayer);
@@ -220,15 +227,26 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   let modelLoaded = false;
   let disposed = false;
   const loader = new GLTFLoader();
+  setText(root, '[data-game-status]', '曜境 S9 模型加载中…');
   loader.load(options.modelUrl ?? '/assets/yaojing-s9.glb', (gltf) => {
     if (disposed) return;
     const model = cloneSkeleton(gltf.scene);
-    configureClone(model, 2.35);
+    configureClone(model, 2.7);
+    // The museum GLB is authored with the vehicle's nose along +X. The game
+    // road runs toward -Z, so rotate the imported car into the driving axis
+    // before it replaces the procedural placeholder.
+    model.rotation.y = Math.PI / 2;
+    model.visible = true;
+    model.traverse((object) => { object.visible = true; });
     player.remove(fallbackPlayer);
     player.add(model);
     modelLoaded = true;
     setText(root, '[data-game-status]', '曜境 S9 已接入 / READY');
-  }, undefined, () => {
+  }, (event) => {
+    const loaded = event.loaded || 0;
+    const total = event.total || 0;
+    if (total > 0) setText(root, '[data-game-status]', `曜境 S9 加载中 ${Math.round((loaded / total) * 100)}%`);
+  }, () => {
     setText(root, '[data-game-status]', '程序化车辆已就绪 / READY');
   });
 
@@ -518,8 +536,11 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     const dt = Math.max(0, Math.min(0.05, (time - lastTime) / 1000 || 0));
     lastTime = time;
     update(dt);
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, player.position.x * 0.24, 4.2, dt);
-    camera.lookAt(player.position.x * 0.18, 0.9, -23);
+    const cameraZ = player.position.z + 8.2;
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, player.position.x * 0.2, 4.2, dt);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, 4.55, 4.2, dt);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, cameraZ, 4.2, dt);
+    camera.lookAt(player.position.x * 0.18, 0.9, player.position.z - 11);
     renderer.render(scene, camera);
   };
 
