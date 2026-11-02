@@ -37,6 +37,19 @@ function setText(root: HTMLElement, selector: string, value: string) {
   if (node) node.textContent = value;
 }
 
+function setVisible(root: HTMLElement, selector: string, visible: boolean) {
+  const node = getEl<HTMLElement>(root, selector);
+  if (!node) return;
+  node.classList.toggle('is-visible', visible);
+  node.setAttribute('aria-hidden', String(!visible));
+}
+
+function formatClock(seconds: number) {
+  const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const wholeSeconds = Math.floor(seconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${wholeSeconds}`;
+}
+
 function makePbrMaterial(color: number, roughness = 0.5, metalness = 0.05) {
   return new THREE.MeshStandardMaterial({ color, roughness, metalness });
 }
@@ -242,13 +255,28 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
 
   const updateUi = () => {
     setText(root, '[data-game-score]', Math.floor(score).toLocaleString('en-US'));
-    setText(root, '[data-game-time]', `${gameTime.toFixed(1)} s`);
+    setText(root, '[data-game-time]', formatClock(gameTime));
     setText(root, '[data-game-energy]', `${Math.round(energy)}%`);
     const energyBar = getEl<HTMLElement>(root, '[data-game-energy-bar]');
-    if (energyBar) energyBar.style.setProperty('--energy', `${Math.max(0, Math.min(100, energy))}%`);
+    if (energyBar) {
+      const energyPercent = Math.max(0, Math.min(100, energy));
+      energyBar.style.setProperty('--energy', `${energyPercent}%`);
+      energyBar.style.width = `${energyPercent}%`;
+    }
     setText(root, '[data-game-mode]', autopilot ? '智驾模式 / AUTO' : mode === 'crashed' ? '碰撞 / RESET' : mode === 'paused' ? '暂停 / PAUSED' : '手动驾驶 / MANUAL');
     const status = getEl<HTMLElement>(root, '[data-game-status]');
-    if (status && mode !== 'ready' && mode !== 'crashed') status.textContent = autopilot ? '智驾模式已接管方向' : '躲避车辆，保持车道';
+    if (status && mode !== 'ready' && mode !== 'crashed') status.textContent = autopilot ? '智驾模式已接管方向' : paused ? '游戏已暂停' : '道路运行中 / 保持车道';
+    const statusCopy = getEl<HTMLElement>(root, '[data-game-status-copy]');
+    if (statusCopy && mode !== 'ready' && mode !== 'crashed') statusCopy.textContent = autopilot ? '系统正在寻找更安全的车道，能量会持续消耗。' : '躲避来车以获得分数与能量，撞击会中断本轮旅程。';
+    setVisible(root, '[data-game-start-screen]', mode === 'ready' && !running);
+    setVisible(root, '[data-game-over]', mode === 'crashed');
+    const message = getEl<HTMLElement>(root, '[data-game-message]');
+    if (message) {
+      message.classList.toggle('is-visible', mode === 'crashed' || autopilot || energy >= 100);
+      if (mode === 'crashed') message.textContent = '发生碰撞，重新开始以再次出发';
+      else if (autopilot) message.textContent = '智驾模式已接管';
+      else if (energy >= 100) message.textContent = '能量充满：智驾模式可用';
+    }
     const autopilotButton = getEl<HTMLButtonElement>(root, '[data-game-autopilot]');
     if (autopilotButton) {
       autopilotButton.disabled = !autopilot && energy < 100;
@@ -281,6 +309,29 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
 
   const setMode = (next: GameMode) => {
     mode = next;
+    const startScreen = getEl<HTMLElement>(root, '[data-game-start-screen]');
+    const overScreen = getEl<HTMLElement>(root, '[data-game-over]');
+    const message = getEl<HTMLElement>(root, '[data-game-message]');
+    const isReady = next === 'ready';
+    const isCrashed = next === 'crashed';
+    startScreen?.classList.toggle('is-visible', isReady);
+    overScreen?.classList.toggle('is-visible', isCrashed);
+    overScreen?.setAttribute('aria-hidden', String(!isCrashed));
+    if (message) {
+      message.textContent = isCrashed
+        ? '车辆发生碰撞，重新规划路线'
+        : next === 'paused'
+          ? '游戏已暂停'
+          : autopilot
+            ? '智驾模式正在寻找安全车道'
+            : isReady
+              ? '准备进入道路'
+              : '保持移动，避开来车';
+      message.classList.toggle('is-visible', next !== 'manual' && next !== 'autopilot');
+    }
+    setText(root, '[data-game-result-time]', `${gameTime.toFixed(1)} s`);
+    setText(root, '[data-game-result-score]', Math.floor(score).toLocaleString('en-US'));
+    setText(root, '[data-game-result-dodged]', String(dodged).padStart(2, '0'));
     updateUi();
   };
 
@@ -300,6 +351,9 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     paused = false;
     spawnTraffic(initialTraffic);
     setMode('ready');
+    setText(root, '[data-game-result-time]', formatClock(gameTime));
+    setText(root, '[data-game-result-score]', '0000');
+    setText(root, '[data-game-result-dodged]', '00');
     updateUi();
   };
 
@@ -352,6 +406,10 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     energy = Math.max(0, energy - 28);
     score = Math.max(0, score - 180);
     setText(root, '[data-game-status]', '发生碰撞，按重新开始继续');
+    setText(root, '[data-game-status-copy]', '车辆与来车发生碰撞，本轮得分已锁定。');
+    setText(root, '[data-game-result-time]', formatClock(gameTime));
+    setText(root, '[data-game-result-score]', Math.floor(score).toLocaleString('en-US'));
+    setText(root, '[data-game-result-dodged]', dodged.toString().padStart(2, '0'));
     setMode('crashed');
     running = false;
   };
