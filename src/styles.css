@@ -630,7 +630,7 @@ body.page-game {
   padding: 0;
   overflow: hidden;
   color: var(--game-ink);
-  background: radial-gradient(circle at 66% 15%, rgba(36, 100, 94, .24), transparent 38%), linear-gradient(145deg, #0b1415 0%, #101c1d 46%, #071010 100%);
+  background: radial-gradient(circle at 66% 15%, rgba(255, 255, 255, .48), transparent 38%), linear-gradient(145deg, #b6dbe7 0%, #88b7c8 46%, #6c98a8 100%);
 }
 .page-game, .page-game body { height: 100svh; overflow: hidden; overscroll-behavior: none; }
 .page-game .site-shell { height: 100svh; min-height: 100svh; overflow: hidden; }
@@ -638,11 +638,11 @@ body.page-game {
 .page-game .chapter--game > .history-footer { display: none; }
 .chapter--game.is-active { display: block; }
 .game-shell { position: relative; display: grid; min-height: 100svh; isolation: isolate; }
-.game-stage { position: relative; min-height: 100svh; overflow: hidden; background: linear-gradient(180deg, rgba(8, 18, 19, .46), transparent 32%, rgba(4, 10, 10, .7)), radial-gradient(ellipse at 50% 62%, rgba(54, 102, 98, .22), transparent 52%); }
+.game-stage { position: relative; min-height: 100svh; overflow: hidden; background: linear-gradient(180deg, rgba(230, 247, 252, .12), transparent 32%, rgba(29, 58, 65, .24)), radial-gradient(ellipse at 50% 62%, rgba(71, 143, 150, .18), transparent 52%); }
 #game-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 .game-stage::before, .game-stage::after { position: absolute; z-index: 1; pointer-events: none; content: ''; }
-.game-stage::before { inset: 0; background: linear-gradient(90deg, rgba(4, 10, 10, .56), transparent 22%, transparent 78%, rgba(4, 10, 10, .56)); }
-.game-stage::after { inset: auto 0 0; height: 36%; background: linear-gradient(0deg, rgba(3, 8, 8, .78), transparent); }
+.game-stage::before { inset: 0; background: linear-gradient(90deg, rgba(24, 56, 65, .2), transparent 22%, transparent 78%, rgba(24, 56, 65, .2)); }
+.game-stage::after { inset: auto 0 0; height: 36%; background: linear-gradient(0deg, rgba(24, 50, 58, .32), transparent); }
 .game-hud { position: absolute; inset: 24px 28px auto; z-index: 4; display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr); align-items: start; gap: 20px; pointer-events: none; }
 .game-hud__brand, .game-hud__metric, .game-hud__status { display: grid; gap: 5px; }
 .game-hud__brand { justify-items: start; } .game-hud__metric { justify-items: center; } .game-hud__status { justify-items: end; }

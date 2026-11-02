@@ -158,14 +158,14 @@ function createProceduralCar(color = 0x667783, scale = 1): THREE.Group {
 function createRoad(scene: THREE.Scene) {
   const road = new THREE.Mesh(
     new THREE.PlaneGeometry(ROAD_WIDTH, ROAD_LENGTH),
-    new THREE.MeshStandardMaterial({ color: 0x171d22, roughness: 0.92, metalness: 0.04 }),
+    new THREE.MeshStandardMaterial({ color: 0x3d454b, roughness: 0.9, metalness: 0.03 }),
   );
   road.rotation.x = -Math.PI / 2;
   road.position.set(0, 0, -ROAD_LENGTH / 2 + 25);
   road.receiveShadow = true;
   scene.add(road);
 
-  const shoulderMaterial = new THREE.MeshStandardMaterial({ color: 0x2b353a, roughness: 0.9 });
+  const shoulderMaterial = new THREE.MeshStandardMaterial({ color: 0x77838a, roughness: 0.86, metalness: 0.03 });
   [-1, 1].forEach((side) => {
     const shoulder = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.05, ROAD_LENGTH), shoulderMaterial);
     shoulder.position.set(side * (ROAD_WIDTH / 2 + 0.25), 0.025, road.position.z);
@@ -173,7 +173,7 @@ function createRoad(scene: THREE.Scene) {
     scene.add(shoulder);
   });
 
-  const laneMaterial = new THREE.MeshStandardMaterial({ color: 0xc6d5d5, roughness: 0.65, emissive: 0x283839, emissiveIntensity: 0.25 });
+  const laneMaterial = new THREE.MeshStandardMaterial({ color: 0xf4f8f7, roughness: 0.6, emissive: 0x7d969c, emissiveIntensity: 0.08 });
   const laneMarkers: THREE.Mesh[] = [];
   [-1.55, 1.55].forEach((x) => {
     for (let index = 0; index < 24; index += 1) {
@@ -185,7 +185,7 @@ function createRoad(scene: THREE.Scene) {
     }
   });
 
-  const sideLightMaterial = new THREE.MeshStandardMaterial({ color: 0x85c9c6, emissive: 0x4db8b5, emissiveIntensity: 1.7 });
+  const sideLightMaterial = new THREE.MeshStandardMaterial({ color: 0x6faeb4, emissive: 0x2c747a, emissiveIntensity: 0.55 });
   const sideLights: THREE.Mesh[] = [];
   [-1, 1].forEach((side) => {
     for (let index = 0; index < 31; index += 1) {
@@ -216,16 +216,16 @@ function createCityBackdrop(scene: THREE.Scene) {
   scene.add(city);
 
   const buildingMaterials = [
-    makePbrMaterial(0x14262a, 0.86, 0.08),
-    makePbrMaterial(0x1b2f33, 0.82, 0.1),
-    makePbrMaterial(0x202a35, 0.9, 0.06),
-    makePbrMaterial(0x26383a, 0.84, 0.08),
+    makePbrMaterial(0x60737c, 0.86, 0.06),
+    makePbrMaterial(0x71858d, 0.82, 0.08),
+    makePbrMaterial(0x71808f, 0.9, 0.05),
+    makePbrMaterial(0x86989c, 0.84, 0.06),
   ];
-  const roofMaterial = makePbrMaterial(0x0b171a, 0.76, 0.18);
+  const roofMaterial = makePbrMaterial(0x4a5b63, 0.78, 0.12);
   const windowMaterials = [
-    new THREE.MeshStandardMaterial({ color: 0xffc46e, emissive: 0xff8d42, emissiveIntensity: 1.8, roughness: 0.4 }),
-    new THREE.MeshStandardMaterial({ color: 0x8de9dd, emissive: 0x39b8b2, emissiveIntensity: 1.5, roughness: 0.42 }),
-    new THREE.MeshStandardMaterial({ color: 0xa6c7ff, emissive: 0x5c82d8, emissiveIntensity: 1.25, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0xffdf9a, emissive: 0xd99543, emissiveIntensity: 0.28, roughness: 0.44 }),
+    new THREE.MeshStandardMaterial({ color: 0x9edbd7, emissive: 0x3c9997, emissiveIntensity: 0.22, roughness: 0.46 }),
+    new THREE.MeshStandardMaterial({ color: 0xb9d6f1, emissive: 0x6285b6, emissiveIntensity: 0.18, roughness: 0.48 }),
   ];
   const buildings: THREE.Object3D[] = [];
   const cityLights: THREE.Object3D[] = [];
@@ -336,8 +336,10 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   if (!canvas) throw new Error('Traffic game requires a canvas[data-game-canvas].');
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111b1f);
-  scene.fog = new THREE.Fog(0x111b1f, 45, 180);
+  // Daylight palette: blue sky, pale atmospheric haze, and a warm sun make
+  // the moving city readable without changing any gameplay coordinates.
+  scene.background = new THREE.Color(0xaed7e8);
+  scene.fog = new THREE.Fog(0xaed7e8, 72, 240);
 
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
   // The player vehicle is the visual anchor of this chapter. Keep the chase
@@ -349,14 +351,14 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMappingExposure = 1.2;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  const hemi = new THREE.HemisphereLight(0xaad5d5, 0x172328, 1.6);
+  const hemi = new THREE.HemisphereLight(0xe1f3ff, 0x6c7b82, 2.15);
   scene.add(hemi);
-  const key = new THREE.DirectionalLight(0xffe6cc, 2.8);
-  key.position.set(-10, 18, 8);
+  const key = new THREE.DirectionalLight(0xfff1d2, 4.2);
+  key.position.set(-22, 32, 16);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   key.shadow.camera.left = -22;
@@ -365,8 +367,8 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   key.shadow.camera.bottom = -10;
   key.shadow.camera.far = 90;
   scene.add(key);
-  const fill = new THREE.PointLight(0x72c7cc, 25, 26, 2);
-  fill.position.set(0, 4.5, 2);
+  const fill = new THREE.DirectionalLight(0xa9d9ff, 1.35);
+  fill.position.set(14, 12, 8);
   scene.add(fill);
 
   const road = createRoad(scene);
