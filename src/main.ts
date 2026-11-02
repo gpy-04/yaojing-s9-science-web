@@ -2,6 +2,7 @@ import './styles.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { initTrafficGame } from './game';
 
 type TimelineEvent = {
   year: string;
@@ -180,7 +181,7 @@ app.innerHTML = `
       <div class="chapter-indicator" aria-label="当前章节">
         <span class="chapter-indicator__active" data-chapter-number>01</span>
         <span class="chapter-indicator__slash">/</span>
-        <span>03</span>
+        <span data-chapter-total>03</span>
         <span class="chapter-indicator__label" data-chapter-label>共同进化</span>
       </div>
       <button class="menu-button" type="button" aria-label="打开章节菜单" data-menu-button>
@@ -1242,3 +1243,6 @@ function setupModelExplorer() {
 }
 
 setupModelExplorer();
+
+const gameSection = document.querySelector<HTMLElement>('[data-page="game"]');
+if (gameSection) initTrafficGame(gameSection);
