@@ -490,7 +490,10 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   getEl<HTMLButtonElement>(root, '[data-game-right]')?.addEventListener('pointerdown', moveRight);
   getEl<HTMLButtonElement>(root, '[data-game-start]')?.addEventListener('click', start);
   getEl<HTMLButtonElement>(root, '[data-game-pause]')?.addEventListener('click', pause);
-  getEl<HTMLButtonElement>(root, '[data-game-restart]')?.addEventListener('click', restart);
+  getEl<HTMLButtonElement>(root, '[data-game-restart]')?.addEventListener('click', () => {
+    restart();
+    start();
+  });
   getEl<HTMLButtonElement>(root, '[data-game-autopilot]')?.addEventListener('click', () => setAutopilot());
 
   const resize = () => {
