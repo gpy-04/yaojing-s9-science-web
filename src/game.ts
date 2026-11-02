@@ -59,41 +59,97 @@ function createProceduralCar(color = 0x667783, scale = 1): THREE.Group {
   group.name = 'TrafficVehicle';
   group.scale.setScalar(scale);
 
-  const body = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.54, 4.3), makePbrMaterial(color, 0.28, 0.25));
+  const paintMaterial = makePbrMaterial(color, 0.24, 0.3);
+  const trimMaterial = makePbrMaterial(0x11171c, 0.48, 0.45);
+  const glassMaterial = new THREE.MeshStandardMaterial({ color: 0x10252d, roughness: 0.1, metalness: 0.62, transparent: true, opacity: 0.78 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.54, 4.3), paintMaterial);
   body.position.y = 0.78;
   body.castShadow = true;
   body.receiveShadow = true;
   group.add(body);
 
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.58, 2.05), makePbrMaterial(0x15252d, 0.16, 0.42));
+  // A layered body shell gives the traffic stream a readable silhouette at
+  // distance while keeping the model procedural and cheap to render.
+  const beltline = new THREE.Mesh(new THREE.BoxGeometry(2.02, 0.12, 2.95), trimMaterial);
+  beltline.position.set(0, 1.03, 0.08);
+  group.add(beltline);
+
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.58, 2.05), glassMaterial);
   cabin.position.set(0, 1.25, -0.16);
   cabin.castShadow = true;
   group.add(cabin);
 
-  const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.43, 0.33, 0.035), new THREE.MeshStandardMaterial({ color: 0x8fb2bf, transparent: true, opacity: 0.5, roughness: 0.08, metalness: 0.3 }));
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.08, 1.82), paintMaterial);
+  roof.position.set(0, 1.58, -0.16);
+  roof.castShadow = true;
+  group.add(roof);
+
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.43, 0.33, 0.035), new THREE.MeshStandardMaterial({ color: 0x8fb2bf, transparent: true, opacity: 0.54, roughness: 0.08, metalness: 0.3 }));
   windshield.position.set(0, 1.31, -1.18);
   windshield.rotation.x = -0.14;
   group.add(windshield);
+
+  const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(1.43, 0.3, 0.035), glassMaterial);
+  rearGlass.position.set(0, 1.31, 0.86);
+  rearGlass.rotation.x = 0.12;
+  group.add(rearGlass);
+
+  [-1, 1].forEach((side) => {
+    const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.28, 1.24), glassMaterial);
+    sideWindow.position.set(side * 0.826, 1.31, -0.16);
+    group.add(sideWindow);
+    const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.2), trimMaterial);
+    mirror.position.set(side * 1.02, 1.25, -0.78);
+    mirror.castShadow = true;
+    group.add(mirror);
+  });
 
   const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.22, 0.2), makePbrMaterial(0x171b20, 0.7, 0.1));
   bumper.position.set(0, 0.58, -2.12);
   group.add(bumper);
 
+  const rearBumper = bumper.clone();
+  rearBumper.position.z = 2.12;
+  group.add(rearBumper);
+
+  const grilleMaterial = new THREE.MeshStandardMaterial({ color: 0x05080a, roughness: 0.4, metalness: 0.7 });
+  const grille = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.16, 0.035), grilleMaterial);
+  grille.position.set(0, 0.73, -2.225);
+  group.add(grille);
+  [-0.24, 0, 0.24].forEach((x) => {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.12, 0.045), makePbrMaterial(0x9eafb2, 0.3, 0.78));
+    bar.position.set(x, 0.73, -2.245);
+    group.add(bar);
+  });
+
   const headlampMaterial = new THREE.MeshStandardMaterial({ color: 0xe8f6ff, emissive: 0xa6d8ff, emissiveIntensity: 2.8, roughness: 0.2 });
+  const tailLampMaterial = new THREE.MeshStandardMaterial({ color: 0xff3245, emissive: 0xc51022, emissiveIntensity: 1.8, roughness: 0.24 });
+  const indicatorMaterial = new THREE.MeshStandardMaterial({ color: 0xffbb62, emissive: 0xff791e, emissiveIntensity: 1.4, roughness: 0.24 });
   [-0.64, 0.64].forEach((x) => {
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.13, 0.08), headlampMaterial);
     lamp.position.set(x, 0.87, -2.16);
     group.add(lamp);
+    const indicator = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.085), indicatorMaterial);
+    indicator.position.set(x + (x < 0 ? 0.23 : -0.23), 0.86, -2.17);
+    group.add(indicator);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.08), tailLampMaterial);
+    tail.position.set(x, 0.88, 2.16);
+    group.add(tail);
   });
 
   const wheelMaterial = makePbrMaterial(0x13171b, 0.82, 0.04);
   const wheelGeometry = new THREE.CylinderGeometry(0.43, 0.43, 0.23, 20);
+  const hubMaterial = makePbrMaterial(0x8e9ba0, 0.28, 0.76);
   [-0.98, 0.98].forEach((x) => [-1.36, 1.36].forEach((z) => {
     const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
     wheel.rotation.z = Math.PI / 2;
     wheel.position.set(x, 0.5, z);
     wheel.castShadow = true;
     group.add(wheel);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.245, 16), hubMaterial);
+    hub.rotation.z = Math.PI / 2;
+    hub.position.set(x + (x < 0 ? -0.012 : 0.012), 0.5, z);
+    group.add(hub);
   }));
 
   return group;
@@ -152,6 +208,107 @@ function createRoad(scene: THREE.Scene) {
     });
   };
   return { updateRoad };
+}
+
+function createCityBackdrop(scene: THREE.Scene) {
+  const city = new THREE.Group();
+  city.name = 'CityBackdrop';
+  scene.add(city);
+
+  const buildingMaterials = [
+    makePbrMaterial(0x14262a, 0.86, 0.08),
+    makePbrMaterial(0x1b2f33, 0.82, 0.1),
+    makePbrMaterial(0x202a35, 0.9, 0.06),
+    makePbrMaterial(0x26383a, 0.84, 0.08),
+  ];
+  const roofMaterial = makePbrMaterial(0x0b171a, 0.76, 0.18);
+  const windowMaterials = [
+    new THREE.MeshStandardMaterial({ color: 0xffc46e, emissive: 0xff8d42, emissiveIntensity: 1.8, roughness: 0.4 }),
+    new THREE.MeshStandardMaterial({ color: 0x8de9dd, emissive: 0x39b8b2, emissiveIntensity: 1.5, roughness: 0.42 }),
+    new THREE.MeshStandardMaterial({ color: 0xa6c7ff, emissive: 0x5c82d8, emissiveIntensity: 1.25, roughness: 0.45 }),
+  ];
+  const buildings: THREE.Object3D[] = [];
+  const cityLights: THREE.Object3D[] = [];
+  let seed = 27;
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
+  [-1, 1].forEach((side) => {
+    for (let index = 0; index < 15; index += 1) {
+      const width = 3.6 + random() * 4.6;
+      const depth = 7 + random() * 8;
+      const height = 5 + random() * 13;
+      const x = side * (8.2 + random() * 10.8);
+      const z = -18 - index * 12.5 - random() * 8;
+      const building = new THREE.Mesh(
+        new THREE.BoxGeometry(width, height, depth),
+        buildingMaterials[index % buildingMaterials.length],
+      );
+      building.position.set(x, height / 2 - 0.06, z);
+      building.castShadow = true;
+      building.receiveShadow = true;
+      city.add(building);
+      buildings.push(building);
+
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(width * 0.82, 0.16, depth * 0.82), roofMaterial);
+      roof.position.set(x, height + 0.08, z);
+      city.add(roof);
+      buildings.push(roof);
+
+      if (index % 3 === 0) {
+        const antenna = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.4 + random() * 1.6, 0.06), windowMaterials[1]);
+        antenna.position.set(x + side * width * 0.16, height + 0.85, z);
+        city.add(antenna);
+      }
+
+      const rows = Math.min(5, Math.max(2, Math.floor(height / 2.7)));
+      const columns = Math.max(2, Math.floor(width / 1.35));
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          if (random() < 0.3) continue;
+          const window = new THREE.Mesh(
+            new THREE.BoxGeometry(0.045, 0.16 + random() * 0.05, 0.36),
+            windowMaterials[(index + row + column) % windowMaterials.length],
+          );
+          window.position.set(
+            x - side * (width / 2 + 0.028),
+            1.05 + row * 2.2,
+            z - depth / 2 + 1.05 + column * 1.15,
+          );
+          city.add(window);
+        }
+      }
+    }
+  });
+
+  const lightMaterials = [windowMaterials[0], windowMaterials[1]];
+  [-1, 1].forEach((side) => {
+    for (let index = 0; index < 20; index += 1) {
+      const light = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.08 + random() * 0.12, 0.9 + random() * 1.8),
+        lightMaterials[index % lightMaterials.length],
+      );
+      light.position.set(side * (6.35 + random() * 1.4), 0.32 + random() * 1.15, 20 - index * 10.5 - random() * 5);
+      city.add(light);
+      cityLights.push(light);
+    }
+  });
+
+  const updateCity = (delta: number, speed: number) => {
+    const buildingDrift = speed * delta * 0.08;
+    buildings.forEach((building) => {
+      building.position.z += buildingDrift;
+      if (building.position.z > 30) building.position.z -= 220;
+    });
+    const lightDrift = speed * delta * 0.72;
+    cityLights.forEach((light) => {
+      light.position.z += lightDrift;
+      if (light.position.z > 28) light.position.z -= 230;
+    });
+  };
+  return { updateCity };
 }
 
 function configureClone(root: THREE.Object3D, targetWidth = 2.15) {
@@ -213,6 +370,7 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   scene.add(fill);
 
   const road = createRoad(scene);
+  const city = createCityBackdrop(scene);
   const player = new THREE.Group();
   player.name = 'PlayerVehicle';
   // Keep the player car inside the camera's near field. The road is authored
@@ -262,6 +420,7 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   let autopilot = false;
   let playerTargetX = 0;
   let playerX = 0;
+  let autopilotLane = 1;
   let gameTime = 0;
   let score = 0;
   let energy = 0;
@@ -317,11 +476,38 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     traffic.splice(0).forEach((item) => scene.remove(item.root));
   };
 
+  // Keep a readable escape lane around every incoming wave. A wave can fill
+  // at most two of the three lanes, and a new car is never placed in a lane
+  // that is already occupied at roughly the same depth. This prevents a
+  // random spawn sequence from creating an impossible three-car wall.
+  const SPAWN_WINDOW = 20;
+  const getOpenLanes = (z: number) => LANES
+    .map((_, lane) => lane)
+    .filter((lane) => !traffic.some((item) => item.lane === lane && Math.abs(item.root.position.z - z) < SPAWN_WINDOW));
+
   const spawnTraffic = (count = 1) => {
-    for (let index = 0; index < count; index += 1) {
-      const lane = Math.floor(Math.random() * LANES.length);
-      const z = -58 - Math.random() * 88 - index * 17;
-      makeTraffic(lane, z);
+    let remaining = count;
+    let wave = 0;
+    let attempts = 0;
+    while (remaining > 0 && attempts < count * 8) {
+      // Separate waves longitudinally so their guaranteed gap remains
+      // visible as traffic approaches the player.
+      const z = -58 - Math.random() * 34 - wave * 28;
+      const openLanes = getOpenLanes(z);
+      if (openLanes.length === 0) {
+        wave += 1;
+        attempts += 1;
+        continue;
+      }
+
+      // Reserve at least one lane in this wave. Shuffle the available lanes
+      // so the safe lane changes naturally between waves.
+      openLanes.sort(() => Math.random() - 0.5);
+      const waveCount = Math.min(remaining, LANES.length - 1, openLanes.length);
+      for (let index = 0; index < waveCount; index += 1) makeTraffic(openLanes[index], z);
+      remaining -= waveCount;
+      wave += 1;
+      attempts += 1;
     }
   };
 
@@ -364,6 +550,7 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     invulnerable = 0;
     playerTargetX = 0;
     playerX = 0;
+    autopilotLane = 1;
     player.position.x = 0;
     autopilot = false;
     paused = false;
@@ -407,19 +594,55 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   };
 
   const chooseAutopilotLane = () => {
-    const scoreByLane = LANES.map((_, lane) => {
-      const danger = traffic.reduce((total, item) => {
-        const dz = item.root.position.z - player.position.z;
-        if (dz > 16 || dz < -44 || item.lane !== lane) return total;
-        return total + Math.max(0, 44 - Math.abs(dz));
-      }, 0);
-      return danger;
+    const currentLane = LANES.reduce((best, lane, index) => (
+      Math.abs(lane - playerX) < Math.abs(LANES[best] - playerX) ? index : best
+    ), autopilotLane);
+    const worldSpeed = 12.5 * difficulty;
+    const dangerByLane = LANES.map((_, lane) => traffic.reduce((total, item) => {
+      if (item.lane !== lane) return total;
+      const dz = item.root.position.z - player.position.z;
+      // Traffic only reaches the player while it is ahead of us. Predict the
+      // closing time instead of scoring only the current distance; this gives
+      // the controller time to finish a lane change before impact.
+      if (dz >= 4 || dz < -118) return total;
+      const closingSpeed = Math.max(0.7, worldSpeed - item.speed);
+      const eta = Math.max(0, -dz) / closingSpeed;
+      if (eta > 7.5) return total;
+      const urgency = eta < 1.5 ? 280 : eta < 3.4 ? 150 : 58;
+      const proximity = Math.max(0, 16 - Math.abs(dz));
+      return total + urgency + proximity * 4;
+    }, 0));
+
+    // Keep the current lane when it is safe to avoid oscillation. Otherwise
+    // choose the least dangerous lane, with a small lane-change cost.
+    let bestLane = currentLane;
+    let bestScore = dangerByLane[currentLane];
+    dangerByLane.forEach((danger, index) => {
+      const score = danger + Math.abs(index - currentLane) * 8;
+      if (score < bestScore) {
+        bestScore = score;
+        bestLane = index;
+      }
     });
-    let bestLane = 0;
-    scoreByLane.forEach((value, index) => {
-      if (value < scoreByLane[bestLane]) bestLane = index;
-    });
+    autopilotLane = bestLane;
     return LANES[bestLane];
+  };
+
+  const dangerByLaneForEmergency = (blockedItem: TrafficVehicle) => {
+    const candidates = LANES.map((_, lane) => lane).filter((lane) => lane !== blockedItem.lane);
+    const worldSpeed = 12.5 * difficulty;
+    const safeCandidates = candidates.filter((lane) => !traffic.some((item) => {
+      if (item === blockedItem || item.lane !== lane) return false;
+      const dz = item.root.position.z - player.position.z;
+      if (dz > 18 || dz < -92) return false;
+      const closingSpeed = Math.max(0.7, worldSpeed - item.speed);
+      const eta = Math.max(0, -dz) / closingSpeed;
+      return eta < 4.2 || Math.abs(dz) < 10;
+    }));
+    if (safeCandidates.length === 0) return -1;
+    return safeCandidates.reduce((best, lane) => (
+      Math.abs(LANES[lane] - playerX) < Math.abs(LANES[best] - playerX) ? lane : best
+    ), safeCandidates[0]);
   };
 
   const crash = () => {
@@ -445,7 +668,7 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     invulnerable = Math.max(0, invulnerable - dt);
 
     const desiredX = autopilot ? chooseAutopilotLane() : playerTargetX;
-    playerX = THREE.MathUtils.damp(playerX, desiredX, autopilot ? 4.6 : 8.5, dt);
+    playerX = THREE.MathUtils.damp(playerX, desiredX, autopilot ? 10.5 : 8.5, dt);
     player.position.x = playerX;
     player.rotation.z = THREE.MathUtils.damp(player.rotation.z, (desiredX - playerX) * -0.055, 7, dt);
 
@@ -473,7 +696,30 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
         score += autopilot ? 105 : 120;
         if (!autopilot && energy >= 100) setText(root, '[data-game-status]', '智驾能量已充满，点击“智驾模式”');
       }
-      if (playerBox.intersectsBox(item.box)) crash();
+      if (invulnerable <= 0 && playerBox.intersectsBox(item.box)) {
+        if (autopilot) {
+          // An emergency correction is the final safety net for a late spawn
+          // or a partially completed lane change. The traffic rule guarantees
+          // at least one open lane, so auto mode can recover without ending
+          // the run as long as a safe lane exists.
+          const safeLane = dangerByLaneForEmergency(item);
+          if (safeLane >= 0) {
+            autopilotLane = safeLane;
+            playerTargetX = LANES[safeLane];
+            playerX = LANES[safeLane];
+            player.position.x = playerX;
+            invulnerable = Math.max(invulnerable, 0.45);
+          } else {
+            // The traffic generator reserves an escape lane. If two cars
+            // converge in the same frame, let auto mode perform a controlled
+            // intervention instead of ending an otherwise recoverable run.
+            item.root.position.z = player.position.z - 6;
+            item.passed = true;
+            energy = Math.max(0, energy - 10);
+            invulnerable = 0.6;
+          }
+        } else crash();
+      }
       if (item.root.position.z > 26) {
         scene.remove(item.root);
         const index = traffic.indexOf(item);
@@ -536,6 +782,11 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     const dt = Math.max(0, Math.min(0.05, (time - lastTime) / 1000 || 0));
     lastTime = time;
     update(dt);
+    // Keep the skyline alive on the ready screen and while paused. During a
+    // run it inherits the road speed; at rest it drifts slowly like a moving
+    // city backdrop rather than freezing into a static curtain.
+    const citySpeed = running && !paused && mode !== 'crashed' ? 12.5 * difficulty : 3.2;
+    city.updateCity(dt, citySpeed);
     const cameraZ = player.position.z + 8.2;
     camera.position.x = THREE.MathUtils.damp(camera.position.x, player.position.x * 0.2, 4.2, dt);
     camera.position.y = THREE.MathUtils.damp(camera.position.y, 4.55, 4.2, dt);
