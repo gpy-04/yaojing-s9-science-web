@@ -375,7 +375,7 @@ app.innerHTML = `
     <section class="chapter chapter--game" id="game" data-page="game" aria-hidden="true">
       <div class="game-shell">
         <div class="game-stage" data-game-stage>
-          <canvas id="game-canvas" aria-label="曜境 S9 智驾躲避游戏"></canvas>
+          <canvas id="game-canvas" data-game-canvas aria-label="曜境 S9 智驾躲避游戏"></canvas>
           <div class="game-stage__grid" aria-hidden="true"></div>
           <div class="game-stage__scanline" aria-hidden="true"></div>
           <div class="game-topline"><span>YJ / S9</span><span>CHAPTER 03 · AUTONOMOUS RUN</span></div>
@@ -409,10 +409,11 @@ app.innerHTML = `
           </div>
           <div class="game-status-card"><span class="game-status-card__label">CURRENT STATE</span><strong data-game-status>待机 / 等待出发</strong><p data-game-status-copy>道路上的车辆会从前方驶来。保持移动，寻找空出的车道。</p></div>
           <div class="game-controls" aria-label="游戏控制">
-            <button class="game-lane-button" type="button" data-game-lane="left" aria-label="向左换道"><span>←</span><small>左移</small></button>
+            <button class="game-lane-button" type="button" data-game-lane="left" data-game-left aria-label="向左换道"><span>←</span><small>左移</small></button>
             <button class="game-pause-button" type="button" data-game-pause><span>Ⅱ</span><small>暂停</small></button>
-            <button class="game-lane-button" type="button" data-game-lane="right" aria-label="向右换道"><span>→</span><small>右移</small></button>
+            <button class="game-lane-button" type="button" data-game-lane="right" data-game-right aria-label="向右换道"><span>→</span><small>右移</small></button>
           </div>
+          <button class="game-autopilot-button" type="button" data-game-autopilot aria-pressed="false"><span>◎</span><strong>智驾模式</strong><small>充满能量后接管</small></button>
           <div class="game-rules"><span>PLAY RULES</span><p>躲避车辆 +10 分 · 连续躲避积攒能量 · 能量满格后自动进入智驾模式 · 智驾持续时间按存活时间计分。</p></div>
           <div class="game-footer"><button class="text-button" type="button" data-next="explore">返回结构探索 <span>↗</span></button><span>REALTIME / THREE.JS</span></div>
         </aside>
