@@ -218,7 +218,9 @@ function createRoad(scene: THREE.Scene) {
     belt.position.set(beltX, -0.025, road.position.z);
     belt.receiveShadow = true;
     scene.add(belt);
-    landscapeObjects.push(belt);
+    // This is one continuous parcel aligned with the road. Keep it anchored
+    // to the road instead of wrapping it like a short prop; wrapping a full
+    // 230 m mesh creates a visible empty seam beneath the flowerbeds.
 
     // Low hedge blocks make the greenbelt read continuously even at speed.
     for (let index = 0; index < 32; index += 1) {
@@ -262,7 +264,9 @@ function createRoad(scene: THREE.Scene) {
       rail.position.set(railX, height, road.position.z);
       rail.castShadow = true;
       scene.add(rail);
-      landscapeObjects.push(rail);
+      // The guardrail spans the whole authored road. It stays anchored so it
+      // cannot disappear when the per-prop scrolling loop crosses its wrap
+      // threshold; short posts continue to scroll in front of it.
       if (railIndex === 1) rail.rotation.z = side * 0.01;
     });
     for (let index = 0; index < 31; index += 1) {
