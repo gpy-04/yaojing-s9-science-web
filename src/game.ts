@@ -196,6 +196,123 @@ function createRoad(scene: THREE.Scene) {
     }
   });
 
+  // 秋石高架路两侧的连续绿化带：用低矮灌木、行道树和护栏把车道
+  // 与城市楼群分开，形成杭州高架常见的“道路 + 绿岛 + 城市天际线”层次。
+  const landscapeObjects: THREE.Object3D[] = [];
+  const grassMaterial = makePbrMaterial(0x4d775d, 0.94, 0.01);
+  const guardrailMaterial = makePbrMaterial(0x697c80, 0.42, 0.58);
+  const trunkMaterial = makePbrMaterial(0x5b4936, 0.98, 0.01);
+  const foliageMaterials = [
+    makePbrMaterial(0x2f6b4f, 0.92, 0.01),
+    makePbrMaterial(0x3f8058, 0.9, 0.01),
+    makePbrMaterial(0x5d9564, 0.88, 0.01),
+  ];
+  const hedgeGeometry = new THREE.BoxGeometry(0.92, 0.64, 4.7);
+  const trunkGeometry = new THREE.CylinderGeometry(0.08, 0.12, 1.1, 8);
+  const canopyGeometry = new THREE.IcosahedronGeometry(0.58, 1);
+  const canopySmallGeometry = new THREE.IcosahedronGeometry(0.38, 1);
+
+  [-1, 1].forEach((side) => {
+    const beltX = side * (ROAD_WIDTH / 2 + 1.45);
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.12, ROAD_LENGTH), grassMaterial);
+    belt.position.set(beltX, -0.025, road.position.z);
+    belt.receiveShadow = true;
+    scene.add(belt);
+    landscapeObjects.push(belt);
+
+    // Low hedge blocks make the greenbelt read continuously even at speed.
+    for (let index = 0; index < 32; index += 1) {
+      const hedge = new THREE.Mesh(hedgeGeometry, foliageMaterials[index % foliageMaterials.length]);
+      hedge.position.set(side * (6.55 + (index % 2) * 0.2), 0.32, 20 - index * 7.35);
+      hedge.rotation.y = side * (index % 2 ? 0.06 : -0.04);
+      hedge.castShadow = true;
+      hedge.receiveShadow = true;
+      scene.add(hedge);
+      landscapeObjects.push(hedge);
+    }
+
+    // Repeating trees add a recognizable planted boulevard edge without
+    // introducing collision geometry into the playable road surface.
+    for (let index = 0; index < 26; index += 1) {
+      const tree = new THREE.Group();
+      const z = 18 - index * 8.9;
+      const x = side * (7.35 + (index % 3) * 0.22);
+      tree.position.set(x, 0, z);
+      const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+      trunk.position.y = 0.62;
+      trunk.castShadow = true;
+      tree.add(trunk);
+      const canopy = new THREE.Mesh(canopyGeometry, foliageMaterials[(index + 1) % foliageMaterials.length]);
+      canopy.position.set(0, 1.28 + (index % 2) * 0.08, 0);
+      canopy.scale.set(1.05, 1.18, 1.05);
+      canopy.castShadow = true;
+      tree.add(canopy);
+      const lowerCanopy = new THREE.Mesh(canopySmallGeometry, foliageMaterials[(index + 2) % foliageMaterials.length]);
+      lowerCanopy.position.set(side * 0.22, 0.98, 0.18);
+      lowerCanopy.castShadow = true;
+      tree.add(lowerCanopy);
+      scene.add(tree);
+      landscapeObjects.push(tree);
+    }
+
+    // 高架外沿护栏，保持路侧轮廓清晰并强化高架道路的空间感。
+    const railX = side * (ROAD_WIDTH / 2 + 2.55);
+    [0.68, 1.02].forEach((height, railIndex) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.12, ROAD_LENGTH), guardrailMaterial);
+      rail.position.set(railX, height, road.position.z);
+      rail.castShadow = true;
+      scene.add(rail);
+      landscapeObjects.push(rail);
+      if (railIndex === 1) rail.rotation.z = side * 0.01;
+    });
+    for (let index = 0; index < 31; index += 1) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.15, 0.1), guardrailMaterial);
+      post.position.set(railX, 0.55, 22 - index * 7.7);
+      post.castShadow = true;
+      scene.add(post);
+      landscapeObjects.push(post);
+    }
+  });
+
+  // 道路标识：把游戏场景明确为“秋石高架路”，作为可读的地标放在右侧绿化带。
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 640;
+  signCanvas.height = 180;
+  const signContext = signCanvas.getContext('2d');
+  if (signContext) {
+    signContext.fillStyle = '#146b4d';
+    signContext.fillRect(0, 0, signCanvas.width, signCanvas.height);
+    signContext.strokeStyle = '#f1f7e9';
+    signContext.lineWidth = 8;
+    signContext.strokeRect(8, 8, signCanvas.width - 16, signCanvas.height - 16);
+    signContext.fillStyle = '#f7faef';
+    signContext.font = '700 58px "Microsoft YaHei", sans-serif';
+    signContext.textAlign = 'center';
+    signContext.textBaseline = 'middle';
+    signContext.fillText('秋石高架路', signCanvas.width / 2, 70);
+    signContext.font = '500 24px Arial, sans-serif';
+    signContext.letterSpacing = '4px';
+    signContext.fillText('QIUSHI ELEVATED ROAD', signCanvas.width / 2, 128);
+  }
+  const signTexture = new THREE.CanvasTexture(signCanvas);
+  signTexture.colorSpace = THREE.SRGBColorSpace;
+  const signGroup = new THREE.Group();
+  signGroup.position.set(7.55, 3.28, -38);
+  const signBacking = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.86, 0.1), makePbrMaterial(0x253e38, 0.58, 0.2));
+  signBacking.castShadow = true;
+  signGroup.add(signBacking);
+  const signFace = new THREE.Mesh(new THREE.PlaneGeometry(2.72, 0.76), new THREE.MeshStandardMaterial({ map: signTexture, roughness: 0.58, metalness: 0.05 }));
+  signFace.position.z = 0.056;
+  signGroup.add(signFace);
+  [-1, 1].forEach((side) => {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 2.2, 0.09), guardrailMaterial);
+    post.position.set(side * 1.12, -1.48, -0.02);
+    post.castShadow = true;
+    signGroup.add(post);
+  });
+  scene.add(signGroup);
+  landscapeObjects.push(signGroup);
+
   const updateRoad = (delta: number, speed: number) => {
     const dz = speed * delta;
     laneMarkers.forEach((marker) => {
@@ -205,6 +322,10 @@ function createRoad(scene: THREE.Scene) {
     sideLights.forEach((light) => {
       light.position.z += dz;
       if (light.position.z > 25) light.position.z -= 230;
+    });
+    landscapeObjects.forEach((object) => {
+      object.position.z += dz;
+      if (object.position.z > 28) object.position.z -= 230;
     });
   };
   return { updateRoad };
@@ -240,13 +361,19 @@ function createCityBackdrop(scene: THREE.Scene) {
       const width = 3.6 + random() * 4.6;
       const depth = 7 + random() * 8;
       const height = 5 + random() * 13;
-      const x = side * (8.2 + random() * 10.8);
+      // Keep the city parcel behind the greenbelt and elevated-road guardrail.
+      // The previous range could place a wide building with its inner face
+      // inside the road edge, making the facade visibly overlap the playable
+      // surface from the chase camera.
+      const x = side * (12.6 + random() * 8.8);
       const z = -18 - index * 12.5 - random() * 8;
       const building = new THREE.Mesh(
         new THREE.BoxGeometry(width, height, depth),
         buildingMaterials[index % buildingMaterials.length],
       );
-      building.position.set(x, height / 2 - 0.06, z);
+      // Lift the base a touch above the road-side parcel so the facade does
+      // not z-fight with the ground plane when it passes the camera.
+      building.position.set(x, height / 2 + 0.04, z);
       building.castShadow = true;
       building.receiveShadow = true;
       city.add(building);
@@ -469,7 +596,10 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     const vehicle = createProceduralCar(palette[Math.floor(Math.random() * palette.length)], isTruck ? 1.15 : 0.9);
     vehicle.position.set(LANES[lane], 0, z);
     scene.add(vehicle);
-    const entry: TrafficVehicle = { root: vehicle, lane, speed: 6 + Math.random() * 3.5, passed: false, box: new THREE.Box3() };
+    // Keep the traffic stream on one controlled speed. Small random speed
+    // differences used to let separate waves catch up and form a three-wide
+    // wall after several seconds, even when each wave started with a gap.
+    const entry: TrafficVehicle = { root: vehicle, lane, speed: 8.2, passed: false, box: new THREE.Box3() };
     traffic.push(entry);
     return entry;
   };
@@ -482,10 +612,27 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
   // at most two of the three lanes, and a new car is never placed in a lane
   // that is already occupied at roughly the same depth. This prevents a
   // random spawn sequence from creating an impossible three-car wall.
-  const SPAWN_WINDOW = 20;
+  const SPAWN_WINDOW = 28;
+  const WAVE_GAP = 52;
+  const WAVE_JITTER = 12;
+  const getNearbyTraffic = (z: number) => traffic.filter((item) => Math.abs(item.root.position.z - z) < SPAWN_WINDOW);
   const getOpenLanes = (z: number) => LANES
     .map((_, lane) => lane)
     .filter((lane) => !traffic.some((item) => item.lane === lane && Math.abs(item.root.position.z - z) < SPAWN_WINDOW));
+  const COLLISION_HORIZON = 7.5;
+  const getEta = (z: number) => {
+    if (z >= player.position.z + 4) return Number.POSITIVE_INFINITY;
+    const worldSpeed = 12.5 * difficulty;
+    const closingSpeed = Math.max(0.7, worldSpeed - 8.2);
+    return Math.max(0, player.position.z - z) / closingSpeed;
+  };
+  const preservesEscapeLane = (lane: number, z: number) => {
+    const occupied = LANES.map((_, targetLane) => traffic.some((item) => (
+      item.lane === targetLane && getEta(item.root.position.z) <= COLLISION_HORIZON
+    )));
+    if (getEta(z) <= COLLISION_HORIZON) occupied[lane] = true;
+    return occupied.some((blocked) => !blocked);
+  };
 
   const spawnTraffic = (count = 1) => {
     let remaining = count;
@@ -493,8 +640,18 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
     let attempts = 0;
     while (remaining > 0 && attempts < count * 8) {
       // Separate waves longitudinally so their guaranteed gap remains
-      // visible as traffic approaches the player.
-      const z = -58 - Math.random() * 34 - wave * 28;
+      // visible as traffic approaches the player. The old 28m step overlapped
+      // with the random range and allowed a third car to fill the last lane.
+      const z = -58 - Math.random() * WAVE_JITTER - wave * WAVE_GAP;
+      const nearbyTraffic = getNearbyTraffic(z);
+      // A traffic group may contain one or two cars only. If two cars already
+      // occupy this depth band, reject the candidate instead of filling the
+      // remaining lane and creating an unavoidable three-car wall.
+      if (nearbyTraffic.length >= LANES.length - 1) {
+        wave += 1;
+        attempts += 1;
+        continue;
+      }
       const openLanes = getOpenLanes(z);
       if (openLanes.length === 0) {
         wave += 1;
@@ -505,9 +662,21 @@ export function initTrafficGame(root: HTMLElement, options: TrafficGameOptions =
       // Reserve at least one lane in this wave. Shuffle the available lanes
       // so the safe lane changes naturally between waves.
       openLanes.sort(() => Math.random() - 0.5);
-      const waveCount = Math.min(remaining, LANES.length - 1, openLanes.length);
-      for (let index = 0; index < waveCount; index += 1) makeTraffic(openLanes[index], z);
-      remaining -= waveCount;
+      const waveCount = Math.min(remaining, LANES.length - 1 - nearbyTraffic.length, openLanes.length);
+      if (waveCount <= 0) {
+        wave += 1;
+        attempts += 1;
+        continue;
+      }
+      const spawnableLanes = openLanes.filter((lane) => preservesEscapeLane(lane, z));
+      if (spawnableLanes.length === 0) {
+        wave += 1;
+        attempts += 1;
+        continue;
+      }
+      const safeWaveCount = Math.min(waveCount, spawnableLanes.length);
+      for (let index = 0; index < safeWaveCount; index += 1) makeTraffic(spawnableLanes[index], z);
+      remaining -= safeWaveCount;
       wave += 1;
       attempts += 1;
     }
