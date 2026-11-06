@@ -815,15 +815,23 @@ body.page-game {
 @media (max-width: 900px) {
   .chapter--game .game-hud { inset: 54px 18px auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chapter--game .game-hud__mode { grid-column: 2; grid-row: 1; }
-  .chapter--game .game-panel { right: 18px; bottom: 18px; left: 18px; width: auto; }
+  .chapter--game .game-panel { right: 14px; bottom: 14px; left: auto; width: min(290px, calc(100% - 28px)); padding: 14px; gap: 10px; }
+  .chapter--game .game-panel__intro > p:not(.eyebrow), .chapter--game .game-rules { display: none; }
+  .chapter--game .game-status-card { gap: 4px; margin-top: 4px; padding-top: 9px; }
+  .chapter--game .game-status-card p { font-size: 10px; }
+  .chapter--game .game-controls { margin-top: 8px; gap: 5px; }
+  .chapter--game .game-lane-button, .chapter--game .game-pause-button { min-height: 44px; }
+  .chapter--game .game-autopilot-button { margin-top: 6px; padding: 8px 10px; }
+  .chapter--game .game-footer { margin-top: 8px; padding-top: 8px; }
 }
 @media (max-width: 620px) {
   .chapter--game .game-topline { inset: 15px 13px auto; font-size: 8px; }
   .chapter--game .game-hud { inset: 48px 13px auto; gap: 9px; }
   .chapter--game .game-hud__metric--energy i { width: 130px; }
   .chapter--game .game-message { top: 100px; max-width: calc(100% - 26px); text-align: center; }
-  .chapter--game .game-panel { right: 13px; bottom: 13px; left: 13px; padding: 13px 14px; }
-  .chapter--game .game-panel__intro > p:last-child, .chapter--game .game-rules, .chapter--game .game-footer { display: none; }
+  .chapter--game .game-panel { right: 13px; bottom: 13px; left: 13px; width: auto; padding: 13px 14px; }
+  .chapter--game .game-panel__intro > p:last-child, .chapter--game .game-rules { display: none; }
+  .chapter--game .game-footer { display: flex; }
   .chapter--game .game-controls { margin-top: 10px; }
   .chapter--game .game-start-screen, .chapter--game .game-over-screen { padding: 16px; }
   .chapter--game .game-start-screen h2, .chapter--game .game-over-screen h2 { font-size: clamp(2.8rem, 15vw, 4.6rem); }
